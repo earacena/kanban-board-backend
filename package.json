@@ -1,0 +1,19 @@
+{
+  "name": "kanban-board-backend",
+  "version": "1.0.0",
+  "description": "Backend for a kanban board web application.",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/earacena/kanban-board-backend.git"
+  },
+  "author": "Emanuel Aracena Beriguete <earacenadev@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/earacena/kanban-board-backend/issues"
+  },
+  "homepage": "https://github.com/earacena/kanban-board-backend#readme"
+}
