@@ -15,5 +15,16 @@
   "bugs": {
     "url": "https://github.com/earacena/kanban-board-backend/issues"
   },
-  "homepage": "https://github.com/earacena/kanban-board-backend#readme"
+  "homepage": "https://github.com/earacena/kanban-board-backend#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.50.0",
+    "@typescript-eslint/parser": "^5.50.0",
+    "eslint": "^8.33.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.27.5",
+    "typescript": "^4.9.5"
+  }
 }
