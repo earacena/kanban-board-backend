@@ -2,6 +2,7 @@
   "name": "kanban-board-backend",
   "version": "1.0.0",
   "description": "Backend for a kanban board web application.",
+  "private": true,
   "main": "index.ts",
   "scripts": {
     "tsc": "tsc",
