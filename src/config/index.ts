@@ -14,7 +14,7 @@ const checkString = (u: unknown): string => {
   return pipe(string.decode(u), fold(onLeft, onRight));
 };
 
-const checkNumber = (u: unknown): number => {
+const checkPortNumber = (u: unknown): number => {
   // Type check for strings
   // Handle failure
   const onLeft = (): number => 8080;
@@ -40,6 +40,6 @@ const determineDatabaseUrl = (nodeEnv: string): string => {
 
 export const NODE_ENV = checkString(process.env['NODE_ENV']);
 export const DATABASE_URL = determineDatabaseUrl(NODE_ENV);
-export const PORT = checkNumber(process.env['PORT']);
+export const PORT = checkPortNumber(process.env['PORT']);
 export const SECRET_JWT_KEY = checkString(process.env['SECRET_JWT_KEY']);
 export const CORS_ORIGIN = checkString(process.env['CORS_ORIGIN']);
