@@ -22,6 +22,7 @@
   },
   "homepage": "https://github.com/earacena/kanban-board-backend#readme",
   "dependencies": {
+    "argon2": "^0.30.3",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "fp-ts": "^2.13.1",
