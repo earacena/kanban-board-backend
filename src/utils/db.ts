@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-import { NODE_ENV, DATABASE_URL } from '../config';
+import { NODE_ENV, database } from '../config';
 
 let options = {};
 
@@ -18,7 +18,7 @@ if (NODE_ENV === 'production') {
   };
 }
 
-export const sequelize = new Sequelize(DATABASE_URL, options);
+export const sequelize = new Sequelize(database.url, options);
 
 export const connectToDatabase = async () => {
   try {
