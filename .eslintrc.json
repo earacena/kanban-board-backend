@@ -20,5 +20,10 @@
         "@typescript-eslint"
     ],
     "rules": {
+      "@typescript-eslint/no-misused-promises": [
+        "error",
+        { "checksVoidReturn": false }
+      ],
+      "no-console": "off"
     }
 }
