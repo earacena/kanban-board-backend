@@ -3,6 +3,7 @@ import session from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import cors from 'cors';
 import { Client } from 'pg';
+import morgan from 'morgan';
 import loginRouter from './api/login/login.routes';
 import {
   CORS_ORIGIN,
@@ -10,13 +11,15 @@ import {
   SERVER_PORT,
   database,
 } from './config';
+import userRouter from './api/user/user.routes';
+import { connectToDatabase } from './utils/db';
 
 const app = express();
 
 // Pre-route middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(morgan('common'));
 app.use(
   cors({
     origin: CORS_ORIGIN,
@@ -57,14 +60,13 @@ app.use(
 );
 
 // Routes
-app.get(
-  '/api/login',
-  loginRouter,
-);
+app.use('/', loginRouter);
+app.use('/api/users', userRouter);
 
 // Post-route middleware
 
-const main = () => {
+const main = async () => {
+  await connectToDatabase();
   app.listen(SERVER_PORT, () => {
     console.log(`Server @ port ${SERVER_PORT}`);
   });
