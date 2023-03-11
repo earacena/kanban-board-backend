@@ -30,7 +30,6 @@ const createUserController = async (
   try {
     const { name, username, password } = decodeWith(NewUserCredentials)(req.body);
     const passwordHash = await argon2.hash(password);
-    console.log(name, username, password);
 
     const newUser: UserType = decodeWith(User)(
       await UserModel.create({
