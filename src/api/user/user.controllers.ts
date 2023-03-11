@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { type, string } from 'io-ts';
 import argon2 from 'argon2';
-import { decodeWith, decodeResponseWith } from '../../utils/decode';
+import { decodeWith } from '../../utils/decode';
 import UserModel from './user.model';
 import { User } from './user.types';
 import type { UserType } from './user.types';
@@ -32,7 +32,7 @@ const createUserController = async (
     const passwordHash = await argon2.hash(password);
     console.log(name, username, password);
 
-    const newUser: UserType = decodeResponseWith(User)(
+    const newUser: UserType = decodeWith(User)(
       await UserModel.create({
         name,
         username,
