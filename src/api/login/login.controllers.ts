@@ -54,7 +54,7 @@ const logoutController = (
   next: NextFunction,
 ) => {
   try {
-    req.session.destroy((err: unknown) => console.log('Session destroyed: ', err));
+    req.session.destroy((err: unknown) => console.log('Session unable to be destroyed: ', err));
     res.status(200);
   } catch (error: unknown) {
     next(error);
