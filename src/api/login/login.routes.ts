@@ -1,10 +1,11 @@
 import express from 'express';
 import loginControllers from './login.controllers';
 
-const { loginController } = loginControllers;
+const { loginController, logoutController } = loginControllers;
 
 const loginRouter = express.Router();
 
-loginRouter.post('/', loginController);
+loginRouter.post('/login', loginController);
+loginRouter.post('/logout', logoutController);
 
 export default loginRouter;

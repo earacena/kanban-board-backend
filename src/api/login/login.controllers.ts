@@ -1,12 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { string, type } from 'io-ts';
 import argon2 from 'argon2';
-import { sign as JwtSign } from 'jsonwebtoken';
 import { decodeWith, decodeResponseWith } from '../../utils/decode';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
-import { SECRET_JWT_KEY } from '../../config';
 
 const UserCredentials = type({
   username: string,
@@ -34,25 +32,36 @@ const loginController = async (
       return;
     }
 
-    // Group relevant token data
-    const userDetails = {
+    req.session.user = {
       id: user.id,
+      name: user.name,
+      username: user.username,
     };
-
-    const token = decodeWith(string)(JwtSign(userDetails, SECRET_JWT_KEY, { expiresIn: '5m' }));
-
-    res.cookie('token', token, { httpOnly: true });
 
     res
       .status(200)
       .send({
-        id: user.id,
-        username: user.username,
-        name: user.name,
+        user: req.session.user,
       });
   } catch (error: unknown) {
     next(error);
   }
 };
 
-export default { loginController };
+const logoutController = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    req.session.destroy((err: unknown) => console.log('Session destroyed: ', err));
+    res.status(200);
+  } catch (error: unknown) {
+    next(error);
+  }
+};
+
+export default {
+  loginController,
+  logoutController,
+};
