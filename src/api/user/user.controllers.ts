@@ -52,6 +52,22 @@ const createUserController = async (
   }
 };
 
+const fetchCurrentUserController = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    if (req.sessionID && req.session.user) {
+      res.status(200).json({ user: req.session.user });
+      return;
+    }
+  } catch (error: unknown) {
+    next(error);
+  }
+};
+
 export default {
   createUserController,
+  fetchCurrentUserController,
 };
