@@ -24,6 +24,7 @@
         "error",
         { "checksVoidReturn": false }
       ],
-      "no-console": "off"
+      "no-console": "off",
+      "no-void": "off"
     }
 }
