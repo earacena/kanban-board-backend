@@ -52,7 +52,7 @@ const parsePortNumber = (s: string): number => {
 
 export const NODE_ENV = checkString(process.env['NODE_ENV']);
 export const SERVER_PORT = parsePortNumber(process.env['SERVER_PORT'] ?? '');
-export const SECRET_JWT_KEY = checkString(process.env['SECRET_JWT_KEY']);
+// export const SECRET_JWT_KEY = checkString(process.env['SECRET_JWT_KEY']);
 export const CORS_ORIGIN = checkString(process.env['CORS_ORIGIN']);
 export const SECRET_SESSION_KEY = checkString(process.env['SECRET_SESSION_KEY']);
 
