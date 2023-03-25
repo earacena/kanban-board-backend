@@ -62,6 +62,8 @@ const fetchCurrentUserController = (
       res.status(200).json({ user: req.session.user });
       return;
     }
+
+    res.status(403);
   } catch (error: unknown) {
     next(error);
   }
