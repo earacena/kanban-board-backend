@@ -17,9 +17,6 @@ import { connectToDatabase } from './utils/db';
 const app = express();
 
 // Pre-route middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(morgan('common'));
 app.use(
   cors({
     origin: CORS_ORIGIN,
@@ -27,6 +24,9 @@ app.use(
     credentials: true,
   }),
 );
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('common'));
 
 const databaseConn = {
   user: database.user,
