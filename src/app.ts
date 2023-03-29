@@ -1,5 +1,7 @@
 import express from 'express';
-import session from 'express-session';
+import fs from 'fs';
+import https from 'https';
+import session, { SessionOptions } from 'express-session';
 import connectPgSimple from 'connect-pg-simple';
 import cors from 'cors';
 import { Client } from 'pg';
@@ -10,6 +12,7 @@ import {
   SECRET_SESSION_KEY,
   SERVER_PORT,
   database,
+  NODE_ENV,
 } from './config';
 import userRouter from './api/user/user.routes';
 import { connectToDatabase } from './utils/db';
@@ -44,20 +47,25 @@ void client.connect();
 const PgStore = connectPgSimple(session);
 const store = new PgStore({ conString: database.url });
 
-app.use(
-  session({
-    store,
-    secret: SECRET_SESSION_KEY,
-    saveUninitialized: false,
-    resave: false,
-    cookie: {
-      secure: false,
-      httpOnly: false,
-      sameSite: false,
-      maxAge: 1000 * 60 * 60 * 24,
-    },
-  }),
-);
+const sessionOptions: SessionOptions = {
+  store,
+  secret: SECRET_SESSION_KEY,
+  saveUninitialized: false,
+  resave: false,
+  cookie: {
+    secure: true,
+    httpOnly: true,
+    sameSite: 'none',
+    maxAge: 1000 * 60 * 60 * 24,
+  },
+};
+
+if (NODE_ENV === 'production') {
+  // trust first proxy
+  app.set('trust proxy', 1);
+}
+
+app.use(session(sessionOptions));
 
 // Routes
 app.use('/', loginRouter);
@@ -65,11 +73,25 @@ app.use('/api/users', userRouter);
 
 // Post-route middleware
 
+// Running the server
+
 const main = async () => {
   await connectToDatabase();
-  app.listen(SERVER_PORT, () => {
-    console.log(`Server @ port ${SERVER_PORT}`);
-  });
+  if (NODE_ENV === 'development') {
+    const options = {
+      key: fs.readFileSync('.dev/localhost-key.pem'),
+      cert: fs.readFileSync('.dev/localhost.pem'),
+    };
+    https.createServer(options, app).listen(SERVER_PORT, () => {
+      console.log(`https server @ port ${SERVER_PORT}`);
+    });
+  }
+
+  if (NODE_ENV === 'production') {
+    app.listen(SERVER_PORT, () => {
+      console.log(`http server @ port ${SERVER_PORT}`);
+    });
+  }
 };
 
 export default { main, app };
