@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { string, type } from 'io-ts';
 import argon2 from 'argon2';
-import { decodeWith, decodeResponseWith } from '../../utils/decode';
+import { decodeWith, decodeResponseWith, ErrorType } from '../../utils/decode';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
@@ -54,8 +54,15 @@ const logoutController = (
   next: NextFunction,
 ) => {
   try {
-    req.session.destroy((err: unknown) => console.log('Session unable to be destroyed: ', err));
-    res.status(200);
+    req.session.destroy((error: unknown) => {
+      if (error) {
+        const decoded = decodeWith(ErrorType)(error);
+        throw new Error(decoded.message);
+      }
+      console.log('session destroyed successfully');
+    });
+    res.sendStatus(200);
+    return;
   } catch (error: unknown) {
     next(error);
   }
