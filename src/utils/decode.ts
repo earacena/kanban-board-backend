@@ -1,4 +1,6 @@
-import { Errors, Type, TypeOf } from 'io-ts';
+import {
+  Errors, string, type, Type, TypeOf, undefined, union,
+} from 'io-ts';
 import { pipe } from 'fp-ts/lib/function';
 import { getOrElseW } from 'fp-ts/lib/Either';
 import { failure } from 'io-ts/lib/PathReporter';
@@ -19,3 +21,9 @@ export const decodeResponseWith = <
   >(
     codec: Type<ApplicationType, EncodeTo, DecodeFrom>,
   ) => (response: DecodeFrom): TypeOf<typeof codec> => decodeWith(codec)(response);
+
+export const ErrorType = type({
+  name: string,
+  message: string,
+  stack: union([string, undefined]),
+});
