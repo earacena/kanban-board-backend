@@ -4,9 +4,9 @@ import { sequelize } from '../../utils/db';
 class User extends Model {}
 User.init({
   id: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
+    defaultValue: Sequelize.literal('gen_random_uuid()'),
   },
   username: {
     type: DataTypes.TEXT,
