@@ -1,13 +1,7 @@
--- Declare custom types
-CREATE TYPE tag AS (
-  name TEXT NOT NULL,
-  label TEXT NOT NULL,
-  color TEXT NOT NULL
-);
 
 -- Setup schema
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   username TEXT UNIQUE,
   name TEXT,
   password_hash TEXT,
@@ -15,35 +9,37 @@ CREATE TABLE users (
 );
 
 CREATE TABLE boards (
-  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  user_id INTEGER NOT NULL
-  name TEXT NOT NULL,
-  label TEXT NOT NULL,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  label TEXT NOT NULL
 );
 
 CREATE TABLE cards (
-  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  name TEXT NOT NULL,
-  user_id INTEGER NOT NULL,
-  column_id INTEGER NOT NULL,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  column_id uuid NOT NULL,
   brief TEXT NOT NULL,
   body TEXT,
   color TEXT,
-  tags tag[]
 );
 
 CREATE TABLE columns (
-  id INTEGER PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
-  name TEXT NOT NULL,
-  user_id INTEGER NOT NULL,
-  board_d INTEGER NOT NULL,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  board_d uuid NOT NULL
+);
+
+CREATE TABLE tags (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  label TEXT NOT NULL,
+  color TEXT NOT NULL,
 );
 
 CREATE TABLE "session" (
   sid varchar NOT NULL COLLATE "default",
   sess json NOT NULL,
   expire timestamp(6) NOT NULL
-)
-WITH (OIDS=FALSE);
+) WITH (OIDS=FALSE);
+
 ALTER TABLE "session" ADD CONSTRAINT "session_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;
 CREATE INDEX "IDX_session_expire" ON "session" ("expire");
