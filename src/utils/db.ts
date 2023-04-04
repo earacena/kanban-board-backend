@@ -4,7 +4,7 @@ import { NODE_ENV, database } from '../config';
 let options = {};
 
 if (NODE_ENV === 'development') {
-  options = { logging: false };
+  options = { logging: true };
 }
 
 if (NODE_ENV === 'production') {
