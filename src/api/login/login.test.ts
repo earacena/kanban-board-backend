@@ -19,7 +19,7 @@ describe('Login API', () => {
       name: 'Mock User 1',
       username: 'mockuser1',
       passwordHash: 'password_hash',
-      dateRegistered: new Date().toDateString(),
+      dateRegistered: new Date(),
     });
     (argon2.verify as jest.Mock).mockResolvedValue(true);
   });
