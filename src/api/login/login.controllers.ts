@@ -5,6 +5,7 @@ import { decodeWith, decodeResponseWith, ErrorType } from '../../utils/decode';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
+import { SessionError } from '../../utils/errors';
 
 const UserCredentials = type({
   username: string,
@@ -23,7 +24,6 @@ const loginController = async (
     );
 
     const isPasswordCorrect = await argon2.verify(user.passwordHash, password);
-
     if (!isPasswordCorrect) {
       res.status(400).json({
         error: 'invalid credentials',
@@ -57,7 +57,7 @@ const logoutController = (
     req.session.destroy((error: unknown) => {
       if (error) {
         const decoded = decodeWith(ErrorType)(error);
-        throw new Error(decoded.message);
+        throw new SessionError(decoded.message);
       }
       console.log('session destroyed successfully');
     });
