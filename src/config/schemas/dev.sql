@@ -20,7 +20,7 @@ CREATE TABLE cards (
   column_id uuid NOT NULL,
   brief TEXT NOT NULL,
   body TEXT,
-  color TEXT,
+  color TEXT
 );
 
 CREATE TABLE columns (
@@ -32,7 +32,7 @@ CREATE TABLE columns (
 CREATE TABLE tags (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   label TEXT NOT NULL,
-  color TEXT NOT NULL,
+  color TEXT NOT NULL
 );
 
 CREATE TABLE "session" (
