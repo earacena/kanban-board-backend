@@ -8,8 +8,6 @@ import {
   success,
   failure,
   type,
-  number,
-
 } from 'io-ts';
 
 export const DateIsoString = new Type<Date, string, unknown>(
@@ -35,7 +33,7 @@ export const DateC = new Type<Date, Date, unknown>(
 );
 
 export const User = type({
-  id: number,
+  id: string,
   name: string,
   username: string,
   passwordHash: string,

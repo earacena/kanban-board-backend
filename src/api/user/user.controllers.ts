@@ -9,7 +9,7 @@ import type { UserType } from './user.types';
 declare module 'express-session' {
   interface Session {
     user: {
-      id: number,
+      id: string,
       name: string,
       username: string,
     },
