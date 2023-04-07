@@ -42,7 +42,9 @@ const databaseConn = {
 
 const client = new Client(databaseConn);
 // eslint-disable-next-line no-void
-void client.connect();
+if (NODE_ENV !== 'testing') {
+  void client.connect();
+}
 
 const PgStore = connectPgSimple(session);
 const store = new PgStore({ conString: database.url });
