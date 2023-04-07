@@ -40,9 +40,7 @@ const loginController = async (
 
     res
       .status(200)
-      .send({
-        user: req.session.user,
-      });
+      .send(req.session.user);
   } catch (error: unknown) {
     next(error);
   }
