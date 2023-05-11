@@ -78,7 +78,10 @@ app.use('/api/users', userRouter);
 // Running the server
 
 const main = async () => {
-  await connectToDatabase();
+  if (NODE_ENV !== 'testing') {
+    await connectToDatabase();
+  }
+
   if (NODE_ENV === 'development') {
     const options = {
       key: fs.readFileSync('.dev/localhost-key.pem'),
