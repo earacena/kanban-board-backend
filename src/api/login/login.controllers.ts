@@ -1,15 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { string, type } from 'io-ts';
+import { z } from 'zod';
 import argon2 from 'argon2';
-import { decodeWith, decodeResponseWith, ErrorType } from '../../utils/decode';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
 import { SessionError } from '../../utils/errors';
 
-const UserCredentials = type({
-  username: string,
-  password: string,
+const UserCredentials = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+
+const SessionErrorObj = z.object({
+  name: z.string(),
+  message: z.string(),
+  stack: z.union([z.string(), z.undefined()]),
 });
 
 const loginController = async (
@@ -18,8 +23,8 @@ const loginController = async (
   next: NextFunction,
 ) => {
   try {
-    const { username, password } = decodeWith(UserCredentials)(req.body);
-    const user: UserType = decodeResponseWith(User)(
+    const { username, password } = UserCredentials.parse(req.body);
+    const user: UserType = User.parse(
       await UserModel.findOne({ where: { username } }),
     );
 
@@ -54,10 +59,9 @@ const logoutController = (
   try {
     req.session.destroy((error: unknown) => {
       if (error) {
-        const decoded = decodeWith(ErrorType)(error);
+        const decoded = SessionErrorObj.parse(error);
         throw new SessionError(decoded.message);
       }
-      console.log('session destroyed successfully');
     });
     res.sendStatus(200);
     return;

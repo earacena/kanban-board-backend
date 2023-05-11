@@ -1,8 +1,8 @@
 /* eslint-disable import/prefer-default-export */
-import { string, type } from 'io-ts';
+import { z } from 'zod';
 
-export const UserDetails = type({
-  id: string,
-  name: string,
-  username: string,
+export const UserDetails = z.object({
+  id: z.string(),
+  name: z.string(),
+  username: z.string(),
 });

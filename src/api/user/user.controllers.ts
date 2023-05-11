@@ -1,7 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { type, string } from 'io-ts';
+import { z } from 'zod';
 import argon2 from 'argon2';
-import { decodeWith } from '../../utils/decode';
 import UserModel from './user.model';
 import { User } from './user.types';
 import type { UserType } from './user.types';
@@ -16,10 +15,10 @@ declare module 'express-session' {
   }
 }
 
-const NewUserCredentials = type({
-  name: string,
-  username: string,
-  password: string,
+const NewUserCredentials = z.object({
+  name: z.string(),
+  username: z.string(),
+  password: z.string(),
 });
 
 const createUserController = async (
@@ -28,10 +27,10 @@ const createUserController = async (
   next: NextFunction,
 ) => {
   try {
-    const { name, username, password } = decodeWith(NewUserCredentials)(req.body);
+    const { name, username, password } = NewUserCredentials.parse(req.body);
     const passwordHash = await argon2.hash(password);
 
-    const newUser: UserType = decodeWith(User)(
+    const newUser: UserType = User.parse(
       await UserModel.create({
         name,
         username,

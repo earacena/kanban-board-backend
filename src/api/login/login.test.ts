@@ -1,10 +1,14 @@
 import supertest from 'supertest';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
+import { z } from 'zod';
 import User from '../user/user.model';
 import app from '../../app';
-import { decodeWith } from '../../utils/decode';
 import { UserDetails } from './login.types';
+
+const ErrorResponse = z.object({
+  error: z.string(),
+});
 
 const api = supertest(app.app);
 
@@ -36,24 +40,34 @@ describe('Login API', () => {
         .send(credentials)
         .expect(200);
 
-      const responseData = decodeWith(UserDetails)(JSON.parse(response.text));
+      const responseData = UserDetails.parse(JSON.parse(response.text));
       expect(responseData.id).toBeDefined();
       expect(responseData.name).toBeDefined();
       expect(responseData.username).toBeDefined();
     });
 
-    test('incorrect credentials return an error', async () => {
+    test('incorrect credentials for existing user return an error', async () => {
       (argon2.verify as jest.Mock).mockResolvedValueOnce(false);
-      await api
+      const response = await api
         .post('/login')
         .send(credentials)
         .expect(400);
 
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.error).toBeDefined();
+      expect(responseData.error).toBe('invalid credentials');
+    });
+
+    test('credentials for non-existant user return an error', async () => {
       (User.findOne as jest.Mock).mockResolvedValueOnce(null);
-      await api
+      const response = await api
         .post('/login')
         .send(credentials)
         .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.error).toBeDefined();
+      expect(responseData.error).toBe('invalid credentials');
     });
   });
 });
