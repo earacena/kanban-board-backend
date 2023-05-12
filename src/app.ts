@@ -79,9 +79,9 @@ app.use('/', loginRouter);
 app.use('/api/users', userRouter);
 
 // Post-route middleware
+app.use(errorHandler);
 
 // Running the server
-
 const main = async () => {
   if (NODE_ENV !== 'testing') {
     await connectToDatabase();
