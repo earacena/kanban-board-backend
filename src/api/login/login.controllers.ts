@@ -4,7 +4,7 @@ import argon2 from 'argon2';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
-import { SessionError } from '../../utils/errors';
+import { SessionError, InvalidCredentialsError } from '../../utils/errors';
 
 const UserCredentials = z.object({
   username: z.string(),
@@ -17,18 +17,39 @@ const SessionErrorObj = z.object({
   stack: z.union([z.string(), z.undefined()]),
 });
 
+interface Credentials {
+  username: string,
+  password: string,
+}
+
 const loginController = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const { username, password } = UserCredentials.parse(req.body);
-    const user: UserType = User.parse(
-      await UserModel.findOne({ where: { username } }),
+    let result;
+    result = UserCredentials.safeParse(req.body);
+    let credentials: Credentials;
+
+    if (!result.success) {
+      throw new InvalidCredentialsError();
+    } else {
+      credentials = result.data;
+    }
+
+    result = User.safeParse(
+      await UserModel.findOne({ where: { username: credentials.username } }),
     );
 
-    const isPasswordCorrect = await argon2.verify(user.passwordHash, password);
+    let user: UserType;
+    if (!result.success) {
+      throw new InvalidCredentialsError();
+    } else {
+      user = result.data;
+    }
+
+    const isPasswordCorrect = await argon2.verify(user.passwordHash, credentials.password);
     if (!isPasswordCorrect) {
       res.status(400).json({
         error: 'invalid credentials',
