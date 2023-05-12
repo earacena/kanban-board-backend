@@ -16,6 +16,7 @@ import {
 } from './config';
 import userRouter from './api/user/user.routes';
 import { connectToDatabase } from './utils/db';
+import errorHandler from './middleware/errorHandler.middleware';
 
 const app = express();
 
@@ -46,8 +47,12 @@ if (NODE_ENV !== 'testing') {
   void client.connect();
 }
 
-const PgStore = connectPgSimple(session);
-const store = new PgStore({ conString: database.url });
+let PgStore: typeof connectPgSimple.PGStore;
+let store;
+if (NODE_ENV !== 'testing') {
+  PgStore = connectPgSimple(session);
+  store = new PgStore({ conString: database.url });
+}
 
 const sessionOptions: SessionOptions = {
   store,
