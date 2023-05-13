@@ -11,16 +11,13 @@ const UserCredentials = z.object({
   password: z.string(),
 });
 
+type UserCredentialsType = z.infer<typeof UserCredentials>;
+
 const SessionErrorObj = z.object({
   name: z.string(),
   message: z.string(),
   stack: z.union([z.string(), z.undefined()]),
 });
-
-interface Credentials {
-  username: string,
-  password: string,
-}
 
 const loginController = async (
   req: Request,
@@ -30,10 +27,10 @@ const loginController = async (
   try {
     let result;
     result = UserCredentials.safeParse(req.body);
-    let credentials: Credentials;
+    let credentials: UserCredentialsType;
 
     if (!result.success) {
-      throw new InvalidCredentialsError();
+      throw new InvalidCredentialsError('Missing or incorrect credentials shape in req.body');
     } else {
       credentials = result.data;
     }
@@ -44,18 +41,14 @@ const loginController = async (
 
     let user: UserType;
     if (!result.success) {
-      throw new InvalidCredentialsError();
+      throw new InvalidCredentialsError(`User with username ${credentials.username} does not exist`);
     } else {
       user = result.data;
     }
 
     const isPasswordCorrect = await argon2.verify(user.passwordHash, credentials.password);
     if (!isPasswordCorrect) {
-      res.status(400).json({
-        error: 'invalid credentials',
-      });
-
-      return;
+      throw new InvalidCredentialsError('Password does not match hash');
     }
 
     req.session.user = {
