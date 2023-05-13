@@ -4,6 +4,7 @@ import argon2 from 'argon2';
 import UserModel from './user.model';
 import { User } from './user.types';
 import type { UserType } from './user.types';
+import { InvalidCredentialsError } from '../../utils/errors';
 
 declare module 'express-session' {
   interface Session {
@@ -21,22 +22,39 @@ const NewUserCredentials = z.object({
   password: z.string(),
 });
 
+type NewUserCredentialsType = z.infer<typeof NewUserCredentials>;
+
 const createUserController = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const { name, username, password } = NewUserCredentials.parse(req.body);
-    const passwordHash = await argon2.hash(password);
+    let result;
+    result = NewUserCredentials.safeParse(req.body);
+    let credentials: NewUserCredentialsType;
+    if (!result.success) {
+      throw new InvalidCredentialsError('Missing or incorrect new user credentials shape in req.body');
+    } else {
+      credentials = result.data;
+    }
 
-    const newUser: UserType = User.parse(
+    const passwordHash = await argon2.hash(credentials.password);
+
+    let newUser: UserType;
+    result = User.safeParse(
       await UserModel.create({
-        name,
-        username,
+        name: credentials.name,
+        username: credentials.username,
         passwordHash,
       }),
     );
+
+    if (!result.success) {
+      throw new InvalidCredentialsError('User does not exist due to incorrect credentials');
+    } else {
+      newUser = result.data;
+    }
 
     // Store identifying information in session cookie
     req.session.user = {
