@@ -58,7 +58,7 @@ describe('Login API', () => {
       expect(responseData.error).toBe('invalid credentials');
     });
 
-    test('credentials for non-existant user return an error', async () => {
+    test('credentials for user that does not exist return an error', async () => {
       (User.findOne as jest.Mock).mockResolvedValueOnce(null);
       const response = await api
         .post('/login')
