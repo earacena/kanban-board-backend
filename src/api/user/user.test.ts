@@ -2,7 +2,7 @@ import supertest from 'supertest';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
-import { UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError, ValidationErrorItem } from 'sequelize';
 import User from './user.model';
 import app from '../../app';
 
@@ -14,15 +14,19 @@ const UserDetailsPayload = z.object({
   }),
 });
 
+const ErrorList = z.array(z.object({
+  code: z.string(),
+  message: z.string(),
+}));
+
 const ApiResponse = z.object({
   success: z.boolean(),
-  errors: z.optional(z.array(z.string())),
+  errors: z.optional(ErrorList),
   data: z.optional(UserDetailsPayload),
 });
 
 const api = supertest(app.app);
 
-jest.mock('sequelize');
 jest.mock('argon2');
 jest.mock('../user/user.model');
 
@@ -46,7 +50,7 @@ describe('User API', () => {
       password: 'testPassword123!',
     };
 
-    test('valid credentials return a session cookie', async () => {
+    test('valid credentials return a session cookie (201)', async () => {
       const response = await api
         .post('/api/users/')
         .send(credentials)
@@ -62,23 +66,22 @@ describe('User API', () => {
     });
 
     test('duplicate username credential return an error (400 - bad request)', async () => {
-      (UniqueConstraintError as unknown as jest.Mock).mockReturnValue(() => ({
-        message: 'validation error',
-        fields: {
-          username: 'testuser123',
-        },
-        errors: [
-          {
-            type: 'unique violation',
-            path: 'username',
-            value: 'testuser123',
-            message: 'username must be unique',
-          },
-        ],
-      }));
-
       (User.create as jest.Mock).mockImplementationOnce(() => {
-        throw new UniqueConstraintError({});
+        throw new UniqueConstraintError({
+          message: 'validation error',
+          errors: [
+            new ValidationErrorItem(
+              'username must be unique',
+              'DB',
+              'username',
+              'testuser123',
+              new User(),
+              'test',
+              'unique',
+              [true],
+            ),
+          ],
+        });
       });
 
       const response = await api
@@ -93,21 +96,37 @@ describe('User API', () => {
       expect(responseData.errors).toContain('username must be unique');
     });
 
+    test('username too short should return an error (400 - bad request)', async () => {
+      const response = await api
+        .post('/api/users/')
+        .send({ ...credentials, username: 'test' })
+        .expect(400);
+
+      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(false);
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toContain('name must be unique');
+    });
+
     test('duplicate name credential return an error (400 - bad request)', async () => {
-      (UniqueConstraintError as unknown as jest.Mock).mockReturnValue(() => ({
-        message: 'validation error',
-        fields: {
-          username: 'Test User',
-        },
-        errors: [
-          {
-            type: 'unique violation',
-            path: 'name',
-            value: 'Test User',
-            message: 'name must be unique',
-          },
-        ],
-      }));
+      (User.create as jest.Mock).mockImplementationOnce(() => {
+        throw new UniqueConstraintError({
+          message: 'validation error',
+          errors: [
+            new ValidationErrorItem(
+              'name must be unique',
+              'DB',
+              'name',
+              'Test User',
+              new User(),
+              'test',
+              'unique',
+              [true],
+            ),
+          ],
+        });
+      });
 
       const response = await api
         .post('/api/users/')
@@ -122,27 +141,33 @@ describe('User API', () => {
     });
 
     test('duplicate username and name credential return an error (400 - bad request)', async () => {
-      (UniqueConstraintError as unknown as jest.Mock).mockReturnValue(() => ({
-        message: 'validation error',
-        fields: {
-          username: 'Test User',
-        },
-        errors: [
-          {
-            type: 'unique violation',
-            path: 'name',
-            value: 'Test User',
-            message: 'name must be unique',
-          },
-          {
-            type: 'unique violation',
-            path: 'username',
-            value: 'testuser123',
-            message: 'username must be unique',
-          },
-
-        ],
-      }));
+      (User.create as jest.Mock).mockImplementationOnce(() => {
+        throw new UniqueConstraintError({
+          message: 'validation error',
+          errors: [
+            new ValidationErrorItem(
+              'name must be unique',
+              'DB',
+              'name',
+              'Test User',
+              new User(),
+              'test',
+              'unique',
+              [true],
+            ),
+            new ValidationErrorItem(
+              'username must be unique',
+              'DB',
+              'username',
+              'testuser123',
+              new User(),
+              'test',
+              'unique',
+              [true],
+            ),
+          ],
+        });
+      });
 
       const response = await api
         .post('/api/users/')
@@ -153,8 +178,16 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('name must be unique');
-      expect(responseData.errors).toContain('username must be unique');
+      expect(responseData.errors).toBe([
+        {
+          code: 'unique violation',
+          message: 'name must be unique',
+        },
+        {
+          code: 'unique violation',
+          message: 'username must be unique',
+        },
+      ]);
     });
 
     test('missing credentials return an error (400 - bad request)', async () => {
@@ -167,7 +200,12 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('missing or invalid credentials');
+      expect(responseData.errors).toContain([
+        {
+          code: 'invalid credentials',
+          message: 'password is required',
+        },
+      ]);
     });
 
     test('invalid credential shape return an error (400 - bad request)', async () => {
@@ -180,7 +218,12 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('missing or invalid credentials');
+      expect(responseData.errors).toContain([
+        {
+          code: 'invalid credentials',
+          message: 'incorrect credentials shape',
+        },
+      ]);
     });
 
     test('username not meeting requirements return an error (400 - bad request)', async () => {
