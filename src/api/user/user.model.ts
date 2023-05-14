@@ -11,11 +11,27 @@ User.init({
   username: {
     type: DataTypes.TEXT,
     allowNull: false,
-    unique: true,
+    unique: {
+      name: 'username',
+      msg: 'username must be unique',
+    },
+    validate: {
+      len: [8, 64],
+      msg: 'username must contain 8 to 64 characters',
+    },
   },
   name: {
     type: DataTypes.TEXT,
-    unique: true,
+    unique: {
+      name: 'name',
+      msg: 'name must be unique',
+    },
+    validate: {
+      len: {
+        args: [3, 20],
+        msg: 'name must contain 3 to 20 characters',
+      },
+    },
   },
   dateRegistered: {
     type: DataTypes.DATE,
