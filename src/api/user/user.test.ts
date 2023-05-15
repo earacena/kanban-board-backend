@@ -2,7 +2,7 @@ import supertest from 'supertest';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
 import { z } from 'zod';
-import { UniqueConstraintError, ValidationErrorItem } from 'sequelize';
+import { UniqueConstraintError, ValidationError, ValidationErrorItem } from 'sequelize';
 import User from './user.model';
 import app from '../../app';
 
@@ -14,14 +14,24 @@ const UserDetailsPayload = z.object({
   }),
 });
 
-const ErrorList = z.array(z.object({
-  code: z.string(),
+const BaseErrorPayload = z.object({
+  code: z.union([z.string(), z.null()]),
+  path: z.optional(z.union([
+    z.string(),
+    z.array(z.union([z.string(), z.number()])),
+    z.null(),
+  ])),
+  value: z.optional(z.union([
+    z.string(),
+    z.number(),
+  ])),
   message: z.string(),
-}));
+});
 
 const ApiResponse = z.object({
   success: z.boolean(),
-  errors: z.optional(ErrorList),
+  errorType: z.optional(z.enum(['zod', 'sequelize', 'base'])),
+  errors: z.optional(z.array(BaseErrorPayload)),
   data: z.optional(UserDetailsPayload),
 });
 
@@ -93,10 +103,35 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('username must be unique');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'validation_error',
+          message: 'username must be unique',
+          path: 'username',
+          value: 'testuser123',
+        },
+      ]);
     });
 
     test('username too short should return an error (400 - bad request)', async () => {
+      (User.create as jest.Mock).mockImplementationOnce(() => {
+        throw new ValidationError(
+          'validation error',
+          [
+            new ValidationErrorItem(
+              'username must have a length between 8 and 64 characters',
+              'DB',
+              'username',
+              'te23',
+              new User(),
+              'test',
+              'len',
+              [true],
+            ),
+          ],
+        );
+      });
+
       const response = await api
         .post('/api/users/')
         .send({ ...credentials, username: 'test' })
@@ -106,7 +141,14 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('name must be unique');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'validation_error',
+          message: 'username must have a length between 8 and 64 characters',
+          path: 'username',
+          value: 'te23',
+        },
+      ]);
     });
 
     test('duplicate name credential return an error (400 - bad request)', async () => {
@@ -137,7 +179,14 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('name must be unique');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'validation_error',
+          message: 'name must be unique',
+          path: 'name',
+          value: 'Test User',
+        },
+      ]);
     });
 
     test('duplicate username and name credential return an error (400 - bad request)', async () => {
@@ -178,14 +227,18 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toBe([
+      expect(responseData.errors).toStrictEqual([
         {
-          code: 'unique violation',
+          code: 'validation_error',
           message: 'name must be unique',
+          path: 'name',
+          value: 'Test User',
         },
         {
-          code: 'unique violation',
+          code: 'validation_error',
           message: 'username must be unique',
+          path: 'username',
+          value: 'testuser123',
         },
       ]);
     });
@@ -200,10 +253,16 @@ describe('User API', () => {
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain([
+      expect(responseData.errors).toStrictEqual([
         {
-          code: 'invalid credentials',
-          message: 'password is required',
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['name'],
+        },
+        {
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['password'],
         },
       ]);
     });
@@ -211,45 +270,79 @@ describe('User API', () => {
     test('invalid credential shape return an error (400 - bad request)', async () => {
       const response = await api
         .post('/api/users/')
-        .send({ username: 'testUser123', value: '11134343aaabbcccc' })
+        .send({ ...credentials, value: '11134343aaabbcccc' })
         .expect(400);
 
       const responseData = ApiResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain([
+      expect(responseData.errors).toStrictEqual([
         {
-          code: 'invalid credentials',
-          message: 'incorrect credentials shape',
+          code: 'unrecognized_keys',
+          message: 'Unrecognized key(s) in object: \'value\'',
+          path: [],
         },
       ]);
     });
 
-    test('username not meeting requirements return an error (400 - bad request)', async () => {
+    test('username not being alphanumeric return an error (400 - bad request)', async () => {
+      (User.create as jest.Mock).mockImplementationOnce(() => {
+        throw new ValidationError(
+          'validation error',
+          [
+            new ValidationErrorItem(
+              'username must be alphanumeric',
+              'DB',
+              'username',
+              'te23_',
+              new User(),
+              'test',
+              'isAlphanumeric',
+              [true],
+            ),
+          ],
+        );
+      });
+
       const response = await api
         .post('/api/users/')
-        .send({ username: 'testUser123' })
+        .send({ ...credentials, username: 'te23_' })
         .expect(400);
 
       const responseData = ApiResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toContain('username must be alphanumeric and must contain between 8 and 64 characters');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'validation_error',
+          path: 'username',
+          value: 'te23_',
+          message: 'username must be alphanumeric',
+        },
+      ]);
     });
 
     test('password not meeting requirements return an error (400 - bad request)', async () => {
       const response = await api
         .post('/api/users/')
-        .send({ username: 'testUser123' })
+        .send({ ...credentials, password: 'testUser' })
         .expect(400);
 
       const responseData = ApiResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
       expect(responseData.errors).toBeDefined();
-      expect(responseData.errors).toBe('password must contain a lowercase letter, an uppercase letter, a digit, one of the following symbols !@#$%^&*+=-, and must contain between 8 and 64 characters');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_string',
+          message: 'Invalid',
+          path: [
+            'password',
+          ],
+        },
+      ]);
     });
   });
 });
