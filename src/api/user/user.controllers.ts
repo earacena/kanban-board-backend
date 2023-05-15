@@ -4,7 +4,6 @@ import argon2 from 'argon2';
 import UserModel from './user.model';
 import { User } from './user.types';
 import type { UserType } from './user.types';
-import { InvalidCredentialsError } from '../../utils/errors';
 
 declare module 'express-session' {
   interface Session {
@@ -16,11 +15,13 @@ declare module 'express-session' {
   }
 }
 
+const validPassword = z.string().regex(/^(?=[^a-z]*[a-z])(?=[^A-Z]*[A-Z])(?=\D*\d)(?=[^!#$%^&*=+-]*[!#$%^&*=+-])[A-Za-z0-9!#$%^&*=+-]{8,32}$/);
+
 const NewUserCredentials = z.object({
   name: z.string(),
   username: z.string(),
-  password: z.string(),
-});
+  password: validPassword,
+}).strict();
 
 type NewUserCredentialsType = z.infer<typeof NewUserCredentials>;
 
@@ -30,31 +31,16 @@ const createUserController = async (
   next: NextFunction,
 ) => {
   try {
-    let result;
-    result = NewUserCredentials.safeParse(req.body);
-    let credentials: NewUserCredentialsType;
-    if (!result.success) {
-      throw new InvalidCredentialsError('Missing or incorrect new user credentials shape in req.body');
-    } else {
-      credentials = result.data;
-    }
-
+    const credentials: NewUserCredentialsType = NewUserCredentials.parse(req.body);
     const passwordHash = await argon2.hash(credentials.password);
 
-    let newUser: UserType;
-    result = User.safeParse(
+    const newUser: UserType = User.parse(
       await UserModel.create({
         name: credentials.name,
         username: credentials.username,
         passwordHash,
       }),
     );
-
-    if (!result.success) {
-      throw new InvalidCredentialsError('User does not exist due to incorrect credentials');
-    } else {
-      newUser = result.data;
-    }
 
     // Store identifying information in session cookie
     req.session.user = {
@@ -63,7 +49,14 @@ const createUserController = async (
       username: newUser.username,
     };
 
-    res.status(201).json({ user: req.session.user });
+    res
+      .status(201)
+      .json({
+        success: true,
+        data: {
+          user: req.session.user,
+        },
+      });
   } catch (error: unknown) {
     next(error);
   }
