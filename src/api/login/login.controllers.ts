@@ -5,13 +5,7 @@ import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
 import { IncorrectPasswordError, SessionError } from '../../utils/errors';
-
-const UserCredentials = z.object({
-  username: z.string(),
-  password: z.string(),
-});
-
-type UserCredentialsType = z.infer<typeof UserCredentials>;
+import { UserCredentials, type UserCredentialsType } from './login.types';
 
 const SessionErrorObj = z.object({
   name: z.string(),

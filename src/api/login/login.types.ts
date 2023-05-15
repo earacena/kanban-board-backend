@@ -6,3 +6,10 @@ export const UserDetails = z.object({
   name: z.string(),
   username: z.string(),
 });
+
+export const UserCredentials = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+
+export type UserCredentialsType = z.infer<typeof UserCredentials>;
