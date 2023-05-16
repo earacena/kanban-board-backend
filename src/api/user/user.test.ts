@@ -1,39 +1,10 @@
 import supertest from 'supertest';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
 import { UniqueConstraintError, ValidationError, ValidationErrorItem } from 'sequelize';
 import User from './user.model';
 import app from '../../app';
-
-const UserDetailsPayload = z.object({
-  user: z.object({
-    id: z.string(),
-    name: z.string(),
-    username: z.string(),
-  }),
-});
-
-const BaseErrorPayload = z.object({
-  code: z.union([z.string(), z.null()]),
-  path: z.optional(z.union([
-    z.string(),
-    z.array(z.union([z.string(), z.number()])),
-    z.null(),
-  ])),
-  value: z.optional(z.union([
-    z.string(),
-    z.number(),
-  ])),
-  message: z.string(),
-});
-
-const ApiResponse = z.object({
-  success: z.boolean(),
-  errorType: z.optional(z.enum(['zod', 'sequelize', 'base'])),
-  errors: z.optional(z.array(BaseErrorPayload)),
-  data: z.optional(UserDetailsPayload),
-});
+import { UserDetailsResponse, ErrorResponse } from '../../app.types';
 
 const api = supertest(app.app);
 
@@ -66,7 +37,7 @@ describe('User API', () => {
         .send(credentials)
         .expect(201);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = UserDetailsResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(true);
       expect(responseData.data).toBeDefined();
@@ -99,9 +70,11 @@ describe('User API', () => {
         .send(credentials)
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('sequelize');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -137,9 +110,11 @@ describe('User API', () => {
         .send({ ...credentials, username: 'test' })
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('sequelize');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -175,9 +150,11 @@ describe('User API', () => {
         .send(credentials)
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('sequelize');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -223,9 +200,11 @@ describe('User API', () => {
         .send(credentials)
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('sequelize');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -249,9 +228,11 @@ describe('User API', () => {
         .send({ username: 'testUser123' })
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('zod');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -273,9 +254,11 @@ describe('User API', () => {
         .send({ ...credentials, value: '11134343aaabbcccc' })
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('zod');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -310,9 +293,11 @@ describe('User API', () => {
         .send({ ...credentials, username: 'te23_' })
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('sequelize');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
@@ -330,9 +315,11 @@ describe('User API', () => {
         .send({ ...credentials, password: 'testUser' })
         .expect(400);
 
-      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('zod');
       expect(responseData.errors).toBeDefined();
       expect(responseData.errors).toStrictEqual([
         {
