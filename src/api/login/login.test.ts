@@ -1,14 +1,9 @@
 import supertest from 'supertest';
 import argon2 from 'argon2';
 import { v4 as uuidv4 } from 'uuid';
-import { z } from 'zod';
 import User from '../user/user.model';
 import app from '../../app';
-import { UserDetails } from './login.types';
-
-const ErrorResponse = z.object({
-  error: z.string(),
-});
+import { ErrorResponse, UserDetailsResponse } from '../../app.types';
 
 const api = supertest(app.app);
 
@@ -40,10 +35,12 @@ describe('Login API', () => {
         .send(credentials)
         .expect(200);
 
-      const responseData = UserDetails.parse(JSON.parse(response.text));
-      expect(responseData.id).toBeDefined();
-      expect(responseData.name).toBeDefined();
-      expect(responseData.username).toBeDefined();
+      const responseData = UserDetailsResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(true);
+      expect(responseData.data?.user.id).toBeDefined();
+      expect(responseData.data?.user.name).toBeDefined();
+      expect(responseData.data?.user.username).toBeDefined();
     });
 
     test('incorrect credentials for existing user return an error', async () => {
@@ -54,8 +51,18 @@ describe('Login API', () => {
         .expect(400);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
-      expect(responseData.error).toBeDefined();
-      expect(responseData.error).toBe('invalid credentials');
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_credentials',
+          message: 'credentials do not match records',
+          path: '',
+          value: '',
+        },
+      ]);
     });
 
     test('credentials for user that does not exist return an error', async () => {
@@ -66,8 +73,18 @@ describe('Login API', () => {
         .expect(400);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
-      expect(responseData.error).toBeDefined();
-      expect(responseData.error).toBe('invalid credentials');
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBeDefined();
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_credentials',
+          message: 'user does not exist',
+          path: '',
+          value: '',
+        },
+      ]);
     });
   });
 });
