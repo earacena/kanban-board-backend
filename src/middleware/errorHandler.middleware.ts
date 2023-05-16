@@ -1,7 +1,7 @@
 import { ErrorRequestHandler } from 'express';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import { ZodError } from 'zod';
-import { IncorrectPasswordError } from '../utils/errors';
+import { IncorrectPasswordError, UserNotFoundError } from '../utils/errors';
 
 interface BaseErrorPayload {
   code: string | null,
@@ -45,7 +45,7 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
         errorType: 'sequelize',
         errors,
       });
-  } else if (err instanceof IncorrectPasswordError) {
+  } else if (err instanceof IncorrectPasswordError || err instanceof UserNotFoundError) {
     res
       .status(400)
       .json({
@@ -53,8 +53,10 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
         errorType: 'base',
         errors: [
           {
-            code: 'incorrect_password',
-            message: 'credentials do not match records',
+            code: 'invalid_credentials',
+            message: err.message,
+            path: '',
+            value: '',
           },
         ],
       });
