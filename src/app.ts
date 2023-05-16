@@ -17,6 +17,7 @@ import {
 import userRouter from './api/user/user.routes';
 import { connectToDatabase } from './utils/db';
 import errorHandler from './middleware/errorHandler.middleware';
+import boardRouter from './api/board/board.routes';
 
 const app = express();
 
@@ -77,6 +78,7 @@ app.use(session(sessionOptions));
 // Routes
 app.use('/', loginRouter);
 app.use('/api/users', userRouter);
+app.use('/api/boards', boardRouter);
 
 // Post-route middleware
 app.use(errorHandler);
