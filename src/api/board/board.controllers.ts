@@ -1,6 +1,8 @@
 import { NextFunction, Response, Request } from 'express';
 import { UnauthorizedActionError } from '../../utils/errors';
-import { CreateBoardPayload, Board, getBoardsByUserIdParams } from './board.types';
+import {
+  CreateBoardPayload, Board, getBoardsByUserIdParams, getBoardByIdParams,
+} from './board.types';
 import BoardModel from './board.model';
 
 const createBoardController = async (req: Request, res: Response, next: NextFunction) => {
@@ -30,9 +32,27 @@ const createBoardController = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-const getBoardByIdController = (req: Request, res: Response, next: NextFunction) => {
+const getBoardByIdController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.status(200);
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError('must be logged in to perform this action');
+    }
+
+    const { boardId } = getBoardByIdParams.parse(req.params);
+
+    const board = Board.parse(
+      await BoardModel.findByPk(boardId),
+    );
+
+    const sessionUserId = req.session.user.id;
+    const isUserAuthenticated = sessionUserId === board.userId;
+    if (!isUserAuthenticated) {
+      throw new UnauthorizedActionError('not authorized to perform that action');
+    }
+    res
+      .status(200)
+      .json(board);
   } catch (err: unknown) {
     next(err);
   }
