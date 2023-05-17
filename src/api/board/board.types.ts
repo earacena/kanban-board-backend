@@ -8,3 +8,8 @@ export const Board = z.object({
 });
 
 export type BoardType = z.infer<typeof Board>;
+
+export const CreateBoardPayload = z.object({
+  userId: z.string().uuid(),
+  label: z.string(),
+});
