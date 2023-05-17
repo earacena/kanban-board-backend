@@ -13,3 +13,11 @@ export const CreateBoardPayload = z.object({
   userId: z.string().uuid(),
   label: z.string(),
 });
+
+export const getBoardsByUserIdParams = z.object({
+  userId: z.string(),
+});
+
+export const getBoardByIdParams = z.object({
+  boardId: z.string(),
+});
