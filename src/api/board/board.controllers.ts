@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express';
 import { UnauthorizedActionError } from '../../utils/errors';
 import {
-  CreateBoardPayload, Board, getBoardsByUserIdParams, getBoardByIdParams,
+  CreateBoardPayload, Board, getBoardsByUserIdParams, getBoardByIdParams, UpdateBoardParams,
 } from './board.types';
 import BoardModel from './board.model';
 
@@ -85,9 +85,25 @@ const getBoardsByUserIdController = async (req: Request, res: Response, next: Ne
   }
 };
 
-const updateBoardController = (req: Request, res: Response, next: NextFunction) => {
+const updateBoardController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.status(200);
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError('must be logged in to perform this action');
+    }
+
+    const { boardId, label } = UpdateBoardParams.parse(req.params);
+
+    const results = await BoardModel.update(
+      { label },
+      { where: { id: boardId }, returning: true },
+    );
+
+    const updatedBoard = Board.parse(results[1][0]);
+
+    res
+      .status(200)
+      .json(updatedBoard);
   } catch (err: unknown) {
     next(err);
   }

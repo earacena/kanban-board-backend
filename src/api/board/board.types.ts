@@ -21,3 +21,8 @@ export const getBoardsByUserIdParams = z.object({
 export const getBoardByIdParams = z.object({
   boardId: z.string(),
 });
+
+export const UpdateBoardParams = z.object({
+  boardId: z.string(),
+  label: z.string(),
+});
