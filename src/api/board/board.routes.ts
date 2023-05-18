@@ -12,7 +12,7 @@ const {
 const boardRouter = Router();
 
 boardRouter.post('/', createBoardController);
-boardRouter.get('/:id', getBoardByIdController);
+boardRouter.get('/:boardId', getBoardByIdController);
 boardRouter.get('/:userId', getBoardsByUserIdController);
 boardRouter.put('/', updateBoardController);
 boardRouter.post('/', deleteBoardController);
