@@ -7,18 +7,22 @@ export const Board = z.object({
   dateCreated: z.date(),
 });
 
+export const Boards = z.array(Board);
+
 export type BoardType = z.infer<typeof Board>;
+
+export type BoardArrayType = z.infer<typeof Boards>;
 
 export const CreateBoardPayload = z.object({
   userId: z.string().uuid(),
   label: z.string(),
 });
 
-export const getBoardsByUserIdParams = z.object({
+export const GetBoardsByUserIdParams = z.object({
   userId: z.string(),
 });
 
-export const getBoardByIdParams = z.object({
+export const GetBoardByIdParams = z.object({
   boardId: z.string(),
 });
 
