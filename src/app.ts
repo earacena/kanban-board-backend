@@ -56,12 +56,12 @@ if (NODE_ENV !== 'testing') {
 }
 
 const sessionOptions: SessionOptions = {
-  store,
+  store: NODE_ENV !== 'testing' ? store : undefined,
   secret: SECRET_SESSION_KEY,
   saveUninitialized: false,
   resave: false,
   cookie: {
-    secure: true,
+    secure: NODE_ENV !== 'testing',
     httpOnly: true,
     sameSite: 'none',
     maxAge: 1000 * 60 * 60 * 24,
