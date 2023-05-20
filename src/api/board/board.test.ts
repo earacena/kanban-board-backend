@@ -1,78 +1,193 @@
-import { NextFunction, Request, Response } from 'express';
 import supertest from 'supertest';
-import session from 'express-session';
+import { v4 as uuidv4 } from 'uuid';
+import argon2 from 'argon2';
 import app from '../../app';
-import { BoardArrayType, BoardType } from './board.types';
-import { ApiResponse, BoardPayload, BoardResponse } from '../../app.types';
+import { BoardArrayType, BoardType, Board as BoardObj } from './board.types';
+import { BoardResponse, BoardsResponse, ErrorResponse } from '../../app.types';
+import User from '../user/user.model';
+import Board from './board.model';
 
+const agent = supertest.agent(app.app);
 const api = supertest(app.app);
 
-// jest.mock('express-session', () => ({
-//   // eslint-disable-next-line max-len
-// default: jest.fn().mockImplementation(() => (req:
-// Request, res: Response, next: NextFunction) => next()),
-// }));
-
-jest.mock('express-session', () => ({
-  __esModule: true,
-  default: jest.fn(() => (req: Request, res: Response, next: NextFunction) => next()),
-}));
+jest.mock('sequelize');
+jest.mock('argon2');
 
 describe('Board API', () => {
-  const board: BoardType = {
-    id: 'uuid-board-id',
-    userId: 'uuid-user-id',
-    label: 'Test label',
-    dateCreated: new Date(),
+  const credentials = {
+    name: 'Test User',
+    username: 'testuser123',
+    password: 'testPassword0!',
+  };
+
+  const userId = uuidv4();
+  const alternativeUserId = uuidv4();
+
+  const mockUser = {
+    id: userId,
+    name: 'Test User',
+    username: 'testuser123',
+    passwordHash: 'passwordhash#',
+    dateRegistered: new Date(),
   };
 
   const boards: BoardArrayType = [
     {
-      id: 'uuid-board-id-1',
-      userId: 'uuid-user-id',
+      id: uuidv4(),
+      userId,
       label: 'Test label 1',
       dateCreated: new Date(),
     },
     {
-      id: 'uuid-board-id-2',
-      userId: 'uuid-user-id',
+      id: uuidv4(),
+      userId: alternativeUserId,
       label: 'Test label 2',
       dateCreated: new Date(),
     },
     {
-      id: 'uuid-board-id-3',
-      userId: 'uuid-user-id',
+      id: uuidv4(),
+      userId,
       label: 'Test label 3',
+      dateCreated: new Date(),
+    },
+    {
+      id: uuidv4(),
+      userId: alternativeUserId,
+      label: 'Test label 4',
+      dateCreated: new Date(),
+    },
+    {
+      id: uuidv4(),
+      userId,
+      label: 'Test label 5',
       dateCreated: new Date(),
     },
   ];
 
-  beforeAll(() => {
+  beforeAll((done) => {
+    (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+    (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
+    (argon2.verify as jest.Mock).mockResolvedValue(true);
+
+    void agent
+      .post('/login')
+      .send({ username: credentials.username, password: credentials.password })
+      .expect(200)
+      .end((err, res) => {
+        if (err) { done(err); }
+        done();
+      });
   });
 
   describe('when getting boards', () => {
     test('retrieves board by id (200)', async () => {
-      const response = await api
-        .get('/api/boards/uuid-board-id')
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(boards[0]);
+
+      const testBoard = boards[0];
+      if (testBoard) {
+        const response = await agent
+          .get(`/api/boards/${testBoard?.id}`)
+          .expect(200);
+
+        const responseData = BoardResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBeDefined();
+        expect(responseData.success).toBe(true);
+        expect(responseData.data).toBeDefined();
+        expect(responseData.data?.board).toBe(boards[0]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('retrieves boards by userId (200)', async () => {
+      const userBoards = boards.filter((b) => b.userId === userId);
+      (Board.findAll as jest.Mock).mockResolvedValueOnce(userBoards);
+
+      const response = await agent
+        .get(`/api/boards/user/${userId}`)
         .expect(200);
 
-      const responseData = BoardResponse.parse(await JSON.parse(response.text));
+      const responseData = BoardsResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
       expect(responseData.success).toBe(true);
       expect(responseData.data).toBeDefined();
-      expect(responseData.data?.board).toBe(board);
+      expect(responseData.data?.boards).toStrictEqual(userBoards);
     });
 
-    test('retrieves boards by userId (200)', () => { expect(true).toBe(false); });
-    test('rejects board fetch request by id if there is no valid user session (401)', () => { expect(true).toBe(false); });
-    test('rejects boards fetch request by user id if there is no valid user session (401)', () => { expect(true).toBe(false); });
-    test('rejects board fetch request by id if not the user who created it (401)', () => { expect(true).toBe(false); });
+    test('rejects board fetch request by id if there is no valid user session (401)', async () => {
+      const testBoard = boards[0];
+      if (testBoard) {
+        const response = await api
+          .get(`/api/boards/${testBoard.id}`)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBeDefined();
+        expect(responseData.success).toBe(true);
+        expect(responseData.errors).toBeDefined();
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'not_authorized',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform that action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects boards fetch request by user id if there is no valid user session (401)', async () => {
+      const testBoard = boards[0];
+      if (testBoard) {
+        const response = await api
+          .get(`/api/boards/user/${testBoard.userId}`)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBeDefined();
+        expect(responseData.success).toBe(true);
+        expect(responseData.errors).toBeDefined();
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'not_authorized',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform that action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects board fetch request by id if not the user who created it (401)', async () => {
+      const testBoard = boards[1];
+      if (testBoard) {
+        const response = await api
+          .get(`/api/boards/user/${testBoard.userId}`)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBeDefined();
+        expect(responseData.success).toBe(true);
+        expect(responseData.errors).toBeDefined();
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'not_authorized',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform that action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
     test('rejects boards fetch request by user id if not the user who created them (401)', () => { expect(true).toBe(false); });
     test('rejects request if board does not exist (400)', () => { expect(true).toBe(false); });
     test('rejects request of boards if user does not exist (400)', () => { expect(true).toBe(false); });
   });
 
-  describe('when creating boards', () => {});
-  describe('when deleting boards', () => {});
-  describe('when updating boards', () => {});
-});
+  describe('when creating boards', () => {}); describe('when deleting boards', () => {}); describe('when updating boards', () => {}); });
