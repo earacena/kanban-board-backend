@@ -13,7 +13,7 @@ const boardRouter = Router();
 
 boardRouter.post('/', createBoardController);
 boardRouter.get('/:boardId', getBoardByIdController);
-boardRouter.get('/:userId', getBoardsByUserIdController);
+boardRouter.get('/user/:userId', getBoardsByUserIdController);
 boardRouter.put('/', updateBoardController);
 boardRouter.post('/', deleteBoardController);
 
