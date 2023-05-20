@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express';
 import { UnauthorizedActionError } from '../../utils/errors';
 import {
-  CreateBoardPayload, Board, getBoardsByUserIdParams, getBoardByIdParams, UpdateBoardParams,
+  CreateBoardPayload, Board, GetBoardsByUserIdParams, GetBoardByIdParams, UpdateBoardParams,
 } from './board.types';
 import BoardModel from './board.model';
 
@@ -26,7 +26,10 @@ const createBoardController = async (req: Request, res: Response, next: NextFunc
 
     res
       .status(201)
-      .json(newBoard);
+      .json({
+        success: true,
+        data: newBoard,
+      });
   } catch (err: unknown) {
     next(err);
   }
@@ -39,7 +42,7 @@ const getBoardByIdController = async (req: Request, res: Response, next: NextFun
       throw new UnauthorizedActionError('must be logged in to perform this action');
     }
 
-    const { boardId } = getBoardByIdParams.parse(req.params);
+    const { boardId } = GetBoardByIdParams.parse(req.params);
 
     const board = Board.parse(
       await BoardModel.findByPk(boardId),
@@ -52,7 +55,10 @@ const getBoardByIdController = async (req: Request, res: Response, next: NextFun
     }
     res
       .status(200)
-      .json(board);
+      .json({
+        success: true,
+        data: board,
+      });
   } catch (err: unknown) {
     next(err);
   }
@@ -65,7 +71,7 @@ const getBoardsByUserIdController = async (req: Request, res: Response, next: Ne
       throw new UnauthorizedActionError('must be logged in to perform this action');
     }
 
-    const { userId } = getBoardsByUserIdParams.parse(req.params);
+    const { userId } = GetBoardsByUserIdParams.parse(req.params);
 
     const sessionUserId = req.session.user.id;
     const isUserAuthenticated = sessionUserId === userId;
@@ -79,7 +85,10 @@ const getBoardsByUserIdController = async (req: Request, res: Response, next: Ne
 
     res
       .status(200)
-      .json(board);
+      .json({
+        success: true,
+        data: board,
+      });
   } catch (err: unknown) {
     next(err);
   }
@@ -103,7 +112,10 @@ const updateBoardController = async (req: Request, res: Response, next: NextFunc
 
     res
       .status(200)
-      .json(updatedBoard);
+      .json({
+        success: true,
+        data: updatedBoard,
+      });
   } catch (err: unknown) {
     next(err);
   }
