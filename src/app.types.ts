@@ -1,5 +1,6 @@
 /* eslint-disable import/prefer-default-export */
 import { z } from 'zod';
+import { Board, Boards } from './api/board/board.types';
 
 const ErrorPayload = z.object({
   code: z.union([z.string(), z.null()]),
@@ -15,7 +16,7 @@ const ErrorPayload = z.object({
   message: z.string(),
 });
 
-const ApiResponse = z.object({
+export const ApiResponse = z.object({
   success: z.boolean(),
 });
 
@@ -24,7 +25,7 @@ const ErrorResponsePayload = z.object({
   errors: z.optional(z.array(ErrorPayload)),
 });
 
-const UserDetailsPayload = z.object({
+export const UserDetailsPayload = z.object({
   user: z.object({
     id: z.string(),
     name: z.string(),
@@ -33,4 +34,6 @@ const UserDetailsPayload = z.object({
 });
 
 export const UserDetailsResponse = ApiResponse.and(z.object({ data: UserDetailsPayload }));
+export const BoardResponse = ApiResponse.and(z.object({ data: z.object({ board: Board }) }));
+export const BoardsResponse = ApiResponse.and(z.object({ data: z.object({ boards: Boards }) }));
 export const ErrorResponse = ApiResponse.and(ErrorResponsePayload);
