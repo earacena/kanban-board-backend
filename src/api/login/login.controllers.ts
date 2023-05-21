@@ -1,17 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { z } from 'zod';
 import argon2 from 'argon2';
 import UserModel from '../user/user.model';
 import type { UserType } from '../user/user.types';
 import { User } from '../user/user.types';
 import { IncorrectPasswordError, SessionError, UserNotFoundError } from '../../utils/errors';
 import { UserCredentials, type UserCredentialsType } from './login.types';
-
-const SessionErrorObj = z.object({
-  name: z.string(),
-  message: z.string(),
-  stack: z.union([z.string(), z.undefined()]),
-});
 
 const loginController = async (
   req: Request,
