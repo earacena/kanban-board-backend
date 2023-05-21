@@ -3,7 +3,9 @@ import { v4 as uuidv4 } from 'uuid';
 import argon2 from 'argon2';
 import app from '../../app';
 import { BoardArrayType } from './board.types';
-import { ApiResponse, BoardResponse, BoardsResponse, ErrorResponse } from '../../app.types';
+import {
+  ApiResponse, BoardResponse, BoardsResponse, ErrorResponse,
+} from '../../app.types';
 import User from '../user/user.model';
 import Board from './board.model';
 
@@ -495,5 +497,151 @@ describe('Board API', () => {
     });
   });
 
-  describe('when updating boards', () => {});
+  describe('when updating boards', () => {
+    test('updates a board (200)', async () => {
+      const testBoard = boards[0];
+      const changes = { label: 'this label was updated' };
+      (Board.update as jest.Mock).mockResolvedValueOnce([
+        {},
+        [{ ...testBoard, ...changes }, {}],
+      ]);
+
+      if (testBoard) {
+        const response = await agent
+          .put(`/api/boards/${testBoard.id}`)
+          .send(changes)
+          .expect(200);
+
+        const responseData = BoardResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(true);
+        expect(responseData.data).toBeDefined();
+        expect(responseData.data.board).toStrictEqual({
+          ...testBoard,
+          label: 'this label was updated',
+        });
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+    test('rejects request if there is no valid user session (401)', async () => {
+      const testBoard = boards[0];
+      const changes = { label: 'this label was updated' };
+      (Board.update as jest.Mock).mockResolvedValueOnce([
+        {},
+        [{ ...testBoard, ...changes }, {}],
+      ]);
+
+      if (testBoard) {
+        const response = await api
+          .put(`/api/boards/${testBoard.id}`)
+          .send(changes)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform this action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request if user did not create the board', async () => {
+      const testBoard = boards[1];
+      const changes = { label: 'this label was updated' };
+      (Board.update as jest.Mock).mockResolvedValueOnce([
+        {},
+        [{ ...testBoard, ...changes }, {}],
+      ]);
+
+      if (testBoard) {
+        const response = await agent
+          .put(`/api/boards/${testBoard.id}`)
+          .send(changes)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'not authorized to perform that action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request if board does not exist', async () => {
+      const testBoard = boards[0];
+      const changes = { label: 'this label was updated' };
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      (Board.update as jest.Mock).mockResolvedValueOnce([
+        {},
+        [{ ...testBoard, ...changes }, {}],
+      ]);
+
+      if (testBoard) {
+        const response = await agent
+          .put(`/api/boards/${testBoard.id}`)
+          .send(changes)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'invalid_request',
+            value: '',
+            path: '',
+            message: 'board does not exist',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request if updating fields that dont exist', async () => {
+      const testBoard = boards[0];
+      const changes = { address: 'address was updated' };
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      (Board.update as jest.Mock).mockResolvedValueOnce([
+        {},
+        [{ ...testBoard, ...changes }, {}],
+      ]);
+
+      if (testBoard) {
+        const response = await agent
+          .put(`/api/boards/${testBoard.id}`)
+          .send(changes)
+          .expect(400);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('zod');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unrecognized_keys',
+            message: 'Unrecognized key(s) in object: \'address\'',
+            path: [],
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+  });
 });
