@@ -15,6 +15,10 @@ const createBoardController = async (req: Request, res: Response, next: NextFunc
     }
 
     const { userId, label } = CreateBoardPayload.parse(req.body);
+    const result = User.safeParse(await UserModel.findByPk(userId));
+    if (!result.success) {
+      throw new UserNotFoundError('user does not exist');
+    }
 
     const sessionUserId = req.session.user.id;
     const isUserAuthenticated = sessionUserId === userId;
@@ -30,7 +34,9 @@ const createBoardController = async (req: Request, res: Response, next: NextFunc
       .status(201)
       .json({
         success: true,
-        data: newBoard,
+        data: {
+          board: newBoard,
+        },
       });
   } catch (err: unknown) {
     next(err);
