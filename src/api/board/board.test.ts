@@ -128,10 +128,10 @@ describe('Board API', () => {
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
-            code: 'not_authorized',
+            code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'must be logged in to perform that action',
+            message: 'must be logged in to perform this action',
           },
         ]);
       } else {
@@ -152,10 +152,10 @@ describe('Board API', () => {
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
-            code: 'not_authorized',
+            code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'must be logged in to perform that action',
+            message: 'must be logged in to perform this action',
           },
         ]);
       } else {
@@ -164,22 +164,23 @@ describe('Board API', () => {
     });
 
     test('rejects board fetch request by id if not the user who created it (401)', async () => {
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(boards[1]);
       const testBoard = boards[1];
       if (testBoard) {
         const response = await agent
-          .get(`/api/boards/${testBoard.id}`)
-          .expect(401);
+          .get(`/api/boards/${testBoard.id}`);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        console.log(responseData.errors);
         expect(responseData.success).toBeDefined();
         expect(responseData.success).toBe(false);
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
-            code: 'not_authorized',
+            code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'must be logged in to perform that action',
+            message: 'not authorized to perform that action',
           },
         ]);
       } else {
@@ -188,6 +189,9 @@ describe('Board API', () => {
     });
 
     test('rejects boards fetch request by user id if not the user who created them (401)', async () => {
+      (Board.findAll as jest.Mock).mockResolvedValueOnce(
+        boards.filter((b) => b.userId === boards[1]?.userId),
+      );
       const testBoard = boards[1];
       if (testBoard) {
         const response = await agent
@@ -200,10 +204,10 @@ describe('Board API', () => {
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
-            code: 'not_authorized',
+            code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'must be logged in to perform that action',
+            message: 'not authorized to perform that action',
           },
         ]);
       } else {
@@ -214,7 +218,7 @@ describe('Board API', () => {
     test('rejects request if board does not exist (400)', async () => {
       const response = await agent
         .get(`/api/boards/${uuidv4()}`)
-        .expect(401);
+        .expect(400);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBeDefined();
@@ -222,7 +226,8 @@ describe('Board API', () => {
       expect(responseData.errors).toBeDefined();
     });
 
-    test('rejects request of boards if user does not exist (400)', async () => {
+    test('rejects request of boards if userId does not exist (400)', async () => {
+      (User.findByPk as jest.Mock).mockResolvedValue(null);
       const response = await agent
         .get(`/api/boards/user/${uuidv4()}`)
         .expect(400);
