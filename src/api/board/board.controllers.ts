@@ -1,9 +1,11 @@
 import { NextFunction, Response, Request } from 'express';
-import { UnauthorizedActionError } from '../../utils/errors';
+import { UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
 import {
-  CreateBoardPayload, Board, GetBoardsByUserIdParams, GetBoardByIdParams, UpdateBoardParams,
+  CreateBoardPayload, Board, GetBoardsByUserIdParams, GetBoardByIdParams, UpdateBoardParams, Boards,
 } from './board.types';
 import BoardModel from './board.model';
+import UserModel from '../user/user.model';
+import { User } from '../user/user.types';
 
 const createBoardController = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -43,7 +45,6 @@ const getBoardByIdController = async (req: Request, res: Response, next: NextFun
     }
 
     const { boardId } = GetBoardByIdParams.parse(req.params);
-
     const board = Board.parse(
       await BoardModel.findByPk(boardId),
     );
@@ -53,6 +54,7 @@ const getBoardByIdController = async (req: Request, res: Response, next: NextFun
     if (!isUserAuthenticated) {
       throw new UnauthorizedActionError('not authorized to perform that action');
     }
+
     res
       .status(200)
       .json({
@@ -75,21 +77,28 @@ const getBoardsByUserIdController = async (req: Request, res: Response, next: Ne
 
     const { userId } = GetBoardsByUserIdParams.parse(req.params);
 
+    const result = User.safeParse(await UserModel.findByPk(userId));
+    if (!result.success) {
+      throw new UserNotFoundError(`user does not exist: ${userId}`);
+    }
+
     const sessionUserId = req.session.user.id;
     const isUserAuthenticated = sessionUserId === userId;
     if (!isUserAuthenticated) {
       throw new UnauthorizedActionError('not authorized to perform that action');
     }
 
-    const board = Board.parse(
-      await BoardModel.findOne({ where: { userId } }),
+    const boards = Boards.parse(
+      await BoardModel.findAll({ where: { userId } }),
     );
 
     res
       .status(200)
       .json({
         success: true,
-        data: board,
+        data: {
+          boards,
+        },
       });
   } catch (err: unknown) {
     next(err);
@@ -116,7 +125,9 @@ const updateBoardController = async (req: Request, res: Response, next: NextFunc
       .status(200)
       .json({
         success: true,
-        data: updatedBoard,
+        data: {
+          board: updatedBoard,
+        },
       });
   } catch (err: unknown) {
     next(err);
