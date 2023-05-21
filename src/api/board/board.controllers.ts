@@ -57,7 +57,9 @@ const getBoardByIdController = async (req: Request, res: Response, next: NextFun
       .status(200)
       .json({
         success: true,
-        data: board,
+        data: {
+          board,
+        },
       });
   } catch (err: unknown) {
     next(err);
