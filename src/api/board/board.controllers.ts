@@ -140,7 +140,7 @@ const updateBoardController = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-const deleteBoardController = (req: Request, res: Response, next: NextFunction) => {
+const deleteBoardController = (_req: Request, res: Response, next: NextFunction) => {
   try {
     res.status(200);
   } catch (err: unknown) {
