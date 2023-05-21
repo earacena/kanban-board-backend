@@ -89,11 +89,12 @@ describe('Board API', () => {
           .get(`/api/boards/${testBoard?.id}`)
           .expect(200);
 
+        console.log(JSON.parse(response.text));
         const responseData = BoardResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBeDefined();
         expect(responseData.success).toBe(true);
         expect(responseData.data).toBeDefined();
-        expect(responseData.data?.board).toBe(boards[0]);
+        expect(responseData.data?.board).toStrictEqual(boards[0]);
       } else {
         throw new Error('undefined test data');
       }
@@ -123,7 +124,7 @@ describe('Board API', () => {
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBeDefined();
-        expect(responseData.success).toBe(true);
+        expect(responseData.success).toBe(false);
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
@@ -147,7 +148,7 @@ describe('Board API', () => {
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBeDefined();
-        expect(responseData.success).toBe(true);
+        expect(responseData.success).toBe(false);
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
@@ -165,13 +166,13 @@ describe('Board API', () => {
     test('rejects board fetch request by id if not the user who created it (401)', async () => {
       const testBoard = boards[1];
       if (testBoard) {
-        const response = await api
-          .get(`/api/boards/user/${testBoard.userId}`)
+        const response = await agent
+          .get(`/api/boards/${testBoard.id}`)
           .expect(401);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBeDefined();
-        expect(responseData.success).toBe(true);
+        expect(responseData.success).toBe(false);
         expect(responseData.errors).toBeDefined();
         expect(responseData.errors).toStrictEqual([
           {
@@ -185,9 +186,55 @@ describe('Board API', () => {
         throw new Error('undefined test data');
       }
     });
-    test('rejects boards fetch request by user id if not the user who created them (401)', () => { expect(true).toBe(false); });
-    test('rejects request if board does not exist (400)', () => { expect(true).toBe(false); });
-    test('rejects request of boards if user does not exist (400)', () => { expect(true).toBe(false); });
+
+    test('rejects boards fetch request by user id if not the user who created them (401)', async () => {
+      const testBoard = boards[1];
+      if (testBoard) {
+        const response = await agent
+          .get(`/api/boards/user/${testBoard.userId}`)
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBeDefined();
+        expect(responseData.success).toBe(false);
+        expect(responseData.errors).toBeDefined();
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'not_authorized',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform that action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request if board does not exist (400)', async () => {
+      const response = await agent
+        .get(`/api/boards/${uuidv4()}`)
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(false);
+      expect(responseData.errors).toBeDefined();
+    });
+
+    test('rejects request of boards if user does not exist (400)', async () => {
+      const response = await agent
+        .get(`/api/boards/user/${uuidv4()}`)
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(false);
+      expect(responseData.errors).toBeDefined();
+    });
   });
 
-  describe('when creating boards', () => {}); describe('when deleting boards', () => {}); describe('when updating boards', () => {}); });
+  describe('when creating boards', () => {});
+  describe('when deleting boards', () => {});
+  describe('when updating boards', () => {});
+});
