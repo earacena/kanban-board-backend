@@ -15,6 +15,6 @@ boardRouter.post('/', createBoardController);
 boardRouter.get('/:boardId', getBoardByIdController);
 boardRouter.get('/user/:userId', getBoardsByUserIdController);
 boardRouter.put('/', updateBoardController);
-boardRouter.post('/', deleteBoardController);
+boardRouter.delete('/:boardId', deleteBoardController);
 
 export default boardRouter;
