@@ -35,7 +35,7 @@ describe('Login API', () => {
       .post('/login')
       .send(credentials)
       .expect(200)
-      .end((err, res) => {
+      .end((err) => {
         if (err) done(err);
         done();
       });
