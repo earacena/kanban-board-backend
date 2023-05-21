@@ -58,8 +58,7 @@ const logoutController = (
   try {
     req.session.destroy((error: unknown) => {
       if (error) {
-        const decoded = SessionErrorObj.parse(error);
-        throw new SessionError(decoded.message);
+        throw new SessionError('session error');
       }
     });
     res.sendStatus(200);
