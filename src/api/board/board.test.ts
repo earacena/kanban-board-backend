@@ -2,7 +2,7 @@ import supertest from 'supertest';
 import { v4 as uuidv4 } from 'uuid';
 import argon2 from 'argon2';
 import app from '../../app';
-import { BoardArrayType, BoardType, Board as BoardObj } from './board.types';
+import { BoardArrayType } from './board.types';
 import { BoardResponse, BoardsResponse, ErrorResponse } from '../../app.types';
 import User from '../user/user.model';
 import Board from './board.model';
