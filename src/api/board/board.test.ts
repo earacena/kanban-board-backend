@@ -239,7 +239,14 @@ describe('Board API', () => {
     });
   });
 
-  describe('when creating boards', () => {});
+  describe('when creating boards', () => {
+    test('returns a created board (200)', () => {});
+    test('rejects request if given userId does not exist (400)', () => {});
+    test('rejects request if userId and/or label are not supplied (400)', () => {});
+    test('rejects request if session userId and given userId do not match (401)', () => {});
+    test('rejects request if user is not logged in (401)', () => {});
+  });
+
   describe('when deleting boards', () => {});
   describe('when updating boards', () => {});
 });
