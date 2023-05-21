@@ -1,7 +1,7 @@
 import { ErrorRequestHandler } from 'express';
 import { UniqueConstraintError, ValidationError } from 'sequelize';
 import { ZodError } from 'zod';
-import { IncorrectPasswordError, UserNotFoundError } from '../utils/errors';
+import { IncorrectPasswordError, UnauthorizedActionError, UserNotFoundError } from '../utils/errors';
 
 interface BaseErrorPayload {
   code: string | null,
@@ -54,6 +54,21 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
         errors: [
           {
             code: 'invalid_credentials',
+            message: err.message,
+            path: '',
+            value: '',
+          },
+        ],
+      });
+  } else if (err instanceof UnauthorizedActionError) {
+    res
+      .status(401)
+      .json({
+        success: false,
+        errorType: 'base',
+        errors: [
+          {
+            code: 'unauthorized_action',
             message: err.message,
             path: '',
             value: '',
