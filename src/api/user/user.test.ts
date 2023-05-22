@@ -4,15 +4,32 @@ import { v4 as uuidv4 } from 'uuid';
 import { UniqueConstraintError, ValidationError, ValidationErrorItem } from 'sequelize';
 import User from './user.model';
 import app from '../../app';
-import { UserDetailsResponse, ErrorResponse } from '../../app.types';
+import { UserDetailsResponse, ErrorResponse, SessionResponse } from '../../app.types';
 
 const api = supertest(app.app);
+const agent = supertest.agent(app.app);
 
 jest.mock('argon2');
 jest.mock('../user/user.model');
 
 describe('User API', () => {
-  beforeAll(() => {
+  const credentials = {
+    name: 'Test User',
+    username: 'testuser123',
+    password: 'testPassword0!',
+  };
+
+  const userId = uuidv4();
+
+  const mockUser = {
+    id: userId,
+    name: 'Test User',
+    username: 'testuser123',
+    passwordHash: 'passwordhash#',
+    dateRegistered: new Date(),
+  };
+
+  beforeAll((done) => {
     (User.create as jest.Mock).mockResolvedValue({
       id: uuidv4(),
       name: 'Mock User 1',
@@ -22,15 +39,21 @@ describe('User API', () => {
 
     });
     (argon2.hash as jest.Mock).mockResolvedValue('password_hash');
+    (User.findOne as jest.Mock).mockResolvedValue(mockUser);
+    (User.findByPk as jest.Mock).mockResolvedValue(mockUser);
+    (argon2.verify as jest.Mock).mockResolvedValue(true);
+
+    void agent
+      .post('/login')
+      .send({ username: credentials.username, password: credentials.password })
+      .expect(200)
+      .end((err) => {
+        if (err) { done(err); }
+        done();
+      });
   });
 
   describe('when creating a user', () => {
-    const credentials = {
-      name: 'Test User',
-      username: 'testuser123',
-      password: 'testPassword123!',
-    };
-
     test('valid credentials return a session cookie (201)', async () => {
       const response = await api
         .post('/api/users/')
@@ -328,6 +351,42 @@ describe('User API', () => {
           path: [
             'password',
           ],
+        },
+      ]);
+    });
+  });
+
+  describe('when fetching current user', () => {
+    test('returns current session information (200)', async () => {
+      const response = await agent
+        .get('/api/users/fetch-user')
+        .expect(200);
+
+      const responseData = SessionResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(true);
+      expect(responseData.data).toStrictEqual({
+        user: {
+          id: userId,
+          name: credentials.name,
+          username: credentials.username,
+        },
+      });
+    });
+
+    test('rejects request if user is there is not valid session (401)', async () => {
+      const response = await api
+        .get('/api/users/fetch-user')
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'must be logged in to perform this action',
         },
       ]);
     });
