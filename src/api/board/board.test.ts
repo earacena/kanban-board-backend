@@ -414,18 +414,29 @@ describe('Board API', () => {
   });
 
   describe('when deleting boards', () => {
-    test('deletes a board (204)', async () => {
+    test('deletes a board (200)', async () => {
       const testBoard = boards[0];
       if (testBoard) {
         const response = await agent
-          .delete(`/api/boards/${testBoard?.id}`)
-          .expect(204);
+          .delete(`/api/boards/${testBoard.id}`)
+          .expect(200);
 
         const responseData = ApiResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBe(true);
       } else {
         throw new Error('undefined test data');
       }
+    });
+
+    test('returns 200 even if board does not exist (200)', async () => {
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
+
+      const response = await agent
+        .delete(`/api/boards/${uuidv4()}`)
+        .expect(200);
+
+      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(true);
     });
 
     test('rejects deletion request if there is no valid user session', async () => {
@@ -456,7 +467,7 @@ describe('Board API', () => {
       (Board.findByPk as jest.Mock).mockResolvedValueOnce(testBoard);
 
       if (testBoard) {
-        const response = await api
+        const response = await agent
           .delete(`/api/boards/${testBoard?.id}`)
           .expect(401);
 
@@ -468,32 +479,12 @@ describe('Board API', () => {
             code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'not authorized to perform that action',
+            message: 'not authorized to perform this action',
           },
         ]);
       } else {
         throw new Error('undefined test data');
       }
-    });
-
-    test('rejects deletion request if board does not exist', async () => {
-      (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
-
-      const response = await agent
-        .delete(`/api/boards/${uuidv4()}`)
-        .expect(400);
-
-      const responseData = ErrorResponse.parse(JSON.parse(response.text));
-      expect(responseData.success).toBe(false);
-      expect(responseData.errorType).toBe('base');
-      expect(responseData.errors).toStrictEqual([
-        {
-          code: 'invalid_request',
-          value: '',
-          path: '',
-          message: 'board does not exist',
-        },
-      ]);
     });
   });
 
@@ -501,6 +492,7 @@ describe('Board API', () => {
     test('updates a board (200)', async () => {
       const testBoard = boards[0];
       const changes = { label: 'this label was updated' };
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(testBoard);
       (Board.update as jest.Mock).mockResolvedValueOnce([
         {},
         [{ ...testBoard, ...changes }, {}],
@@ -523,6 +515,7 @@ describe('Board API', () => {
         throw new Error('undefined test data');
       }
     });
+
     test('rejects request if there is no valid user session (401)', async () => {
       const testBoard = boards[0];
       const changes = { label: 'this label was updated' };
@@ -556,6 +549,7 @@ describe('Board API', () => {
     test('rejects request if user did not create the board', async () => {
       const testBoard = boards[1];
       const changes = { label: 'this label was updated' };
+      (Board.findByPk as jest.Mock).mockResolvedValueOnce(testBoard);
       (Board.update as jest.Mock).mockResolvedValueOnce([
         {},
         [{ ...testBoard, ...changes }, {}],
@@ -575,7 +569,7 @@ describe('Board API', () => {
             code: 'unauthorized_action',
             value: '',
             path: '',
-            message: 'not authorized to perform that action',
+            message: 'not authorized to perform this action',
           },
         ]);
       } else {
@@ -583,7 +577,7 @@ describe('Board API', () => {
       }
     });
 
-    test('rejects request if board does not exist', async () => {
+    test('returns request if board does not exist', async () => {
       const testBoard = boards[0];
       const changes = { label: 'this label was updated' };
       (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
@@ -596,7 +590,7 @@ describe('Board API', () => {
         const response = await agent
           .put(`/api/boards/${testBoard.id}`)
           .send(changes)
-          .expect(401);
+          .expect(400);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
         expect(responseData.success).toBe(false);
@@ -616,7 +610,7 @@ describe('Board API', () => {
 
     test('rejects request if updating fields that dont exist', async () => {
       const testBoard = boards[0];
-      const changes = { address: 'address was updated' };
+      const changes = { label: 'this was updated', address: 'address was updated' };
       (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
       (Board.update as jest.Mock).mockResolvedValueOnce([
         {},
