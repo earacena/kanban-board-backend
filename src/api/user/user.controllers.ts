@@ -4,6 +4,7 @@ import argon2 from 'argon2';
 import UserModel from './user.model';
 import { User } from './user.types';
 import type { UserType } from './user.types';
+import { UnauthorizedActionError } from '../../utils/errors';
 
 declare module 'express-session' {
   interface Session {
@@ -69,11 +70,16 @@ const fetchCurrentUserController = (
 ) => {
   try {
     if (req.sessionID && req.session.user) {
-      res.status(200).json({ user: req.session.user });
+      res.status(200).json({
+        success: true,
+        data: {
+          user: req.session.user,
+        },
+      });
       return;
     }
 
-    res.status(403);
+    throw new UnauthorizedActionError('must be logged in to perform this action');
   } catch (error: unknown) {
     next(error);
   }
