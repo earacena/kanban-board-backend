@@ -30,3 +30,11 @@ export const UpdateBoardParams = z.object({
   boardId: z.string(),
   label: z.string(),
 });
+
+export const DeleteBoardByIdParams = z.object({
+  boardId: z.string(),
+});
+
+export const UpdatableBoardFields = z.object({
+  label: z.string(),
+}).strict();
