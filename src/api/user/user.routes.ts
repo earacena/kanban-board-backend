@@ -9,6 +9,6 @@ const {
 const userRouter = express.Router();
 
 userRouter.post('/', createUserController);
-userRouter.post('/fetch-user', fetchCurrentUserController);
+userRouter.get('/fetch-user', fetchCurrentUserController);
 
 export default userRouter;
