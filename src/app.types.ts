@@ -33,7 +33,16 @@ export const UserDetailsPayload = z.object({
   }),
 });
 
+export const SessionPayload = z.object({
+  user: z.object({
+    id: z.string(),
+    name: z.string(),
+    username: z.string(),
+  }),
+});
+
 export const UserDetailsResponse = ApiResponse.and(z.object({ data: UserDetailsPayload }));
 export const BoardResponse = ApiResponse.and(z.object({ data: z.object({ board: Board }) }));
 export const BoardsResponse = ApiResponse.and(z.object({ data: z.object({ boards: Boards }) }));
 export const ErrorResponse = ApiResponse.and(ErrorResponsePayload);
+export const SessionResponse = ApiResponse.and(z.object({ data: SessionPayload }));
