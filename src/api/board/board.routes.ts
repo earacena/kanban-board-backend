@@ -14,7 +14,7 @@ const boardRouter = Router();
 boardRouter.post('/', createBoardController);
 boardRouter.get('/:boardId', getBoardByIdController);
 boardRouter.get('/user/:userId', getBoardsByUserIdController);
-boardRouter.put('/', updateBoardController);
+boardRouter.put('/:boardId', updateBoardController);
 boardRouter.delete('/:boardId', deleteBoardController);
 
 export default boardRouter;
