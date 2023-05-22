@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from 'express';
-import { UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
+import { BoardNotFoundError, UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
 import {
-  CreateBoardPayload, Board, GetBoardsByUserIdParams, GetBoardByIdParams, UpdateBoardParams, Boards,
+  CreateBoardPayload, Board, GetBoardsByUserIdParams, GetBoardByIdParams, UpdateBoardParams, Boards, DeleteBoardByIdParams, UpdatableBoardFields,
 } from './board.types';
 import BoardModel from './board.model';
 import UserModel from '../user/user.model';
@@ -118,14 +118,29 @@ const updateBoardController = async (req: Request, res: Response, next: NextFunc
       throw new UnauthorizedActionError('must be logged in to perform this action');
     }
 
-    const { boardId, label } = UpdateBoardParams.parse(req.params);
+    const { boardId } = DeleteBoardByIdParams.parse(req.params);
+    const { label } = UpdatableBoardFields.parse(req.body);
 
-    const results = await BoardModel.update(
+    const results = Board.safeParse(
+      await BoardModel.findByPk(boardId),
+    );
+
+    if (!results.success) {
+      throw new BoardNotFoundError('board does not exist');
+    }
+
+    const board = results.data;
+    const sessionUserId = req.session.user.id;
+    if (board.userId !== sessionUserId) {
+      throw new UnauthorizedActionError('not authorized to perform this action');
+    }
+
+    const updateResults = await BoardModel.update(
       { label },
       { where: { id: boardId }, returning: true },
     );
 
-    const updatedBoard = Board.parse(results[1][0]);
+    const updatedBoard = Board.parse(updateResults[1][0]);
 
     res
       .status(200)
@@ -140,11 +155,40 @@ const updateBoardController = async (req: Request, res: Response, next: NextFunc
   }
 };
 
-const deleteBoardController = (_req: Request, res: Response, next: NextFunction) => {
+const deleteBoardController = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    res.status(200);
-  } catch (err: unknown) {
-    next(err);
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError('must be logged in to perform this action');
+    }
+
+    const { boardId } = DeleteBoardByIdParams.parse(req.params);
+
+    const result = Board.safeParse(
+      await BoardModel.findByPk(boardId),
+    );
+
+    if (!result.success) {
+      // preserve idempotence
+      res.status(200).json({ success: true });
+      return;
+    }
+
+    const board = result.data;
+    const sessionUserId = req.session.user.id;
+    if (board.userId !== sessionUserId) {
+      throw new UnauthorizedActionError('not authorized to perform this action');
+    }
+
+    await BoardModel.destroy({
+      where: {
+        id: boardId,
+      },
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error: unknown) {
+    next(error);
   }
 };
 
