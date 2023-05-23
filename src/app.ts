@@ -18,6 +18,7 @@ import userRouter from './api/user/user.routes';
 import { connectToDatabase } from './utils/db';
 import errorHandler from './middleware/errorHandler.middleware';
 import boardRouter from './api/board/board.routes';
+import columnRouter from './api/column/column.routes';
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use(session(sessionOptions));
 app.use('/', loginRouter);
 app.use('/api/users', userRouter);
 app.use('/api/boards', boardRouter);
+app.use('/api/columns', columnRouter);
 
 // Post-route middleware
 app.use(errorHandler);
