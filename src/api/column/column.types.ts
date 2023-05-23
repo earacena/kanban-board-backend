@@ -11,9 +11,13 @@ export const Column = z.object({
   userId: z.string().uuid(),
   boardId: z.string().uuid(),
   label: z.string(),
+  dateCreated: z.coerce.date(),
 });
 
 export const Columns = z.array(Column);
+
+export type ColumnType = z.infer<typeof Column>;
+export type ColumnArrayType = z.infer<typeof Columns>;
 
 export const GetColumnByIdParams = z.object({
   columnId: z.string(),
