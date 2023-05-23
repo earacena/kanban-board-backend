@@ -17,6 +17,10 @@ Column.init(
       type: DataTypes.UUIDV4,
       allowNull: false,
     },
+    label: {
+      type: DataTypes.TEXT,
+      defaultValue: 'Column',
+    },
   },
   {
     sequelize,
