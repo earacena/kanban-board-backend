@@ -21,6 +21,10 @@ Column.init(
       type: DataTypes.TEXT,
       defaultValue: 'Column',
     },
+    dateCreated: {
+      type: DataTypes.DATE,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+    },
   },
   {
     sequelize,
