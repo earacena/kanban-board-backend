@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import {
+  BoardNotFoundError,
   ColumnNotFoundError,
   UnauthorizedActionError,
   UserNotFoundError,
@@ -10,12 +11,15 @@ import {
   Columns,
   CreateColumnPayload,
   DeleteColumnByIdParams,
+  GetColumnByBoardIdParams,
   GetColumnByIdParams,
   GetColumnsByUserIdParams,
   UpdatableColumnFields,
 } from './column.types';
 import { User } from '../user/user.types';
 import UserModel from '../user/user.model';
+import BoardModel from '../board/board.model';
+import { Board } from '../board/board.types';
 
 const createColumnController = async (
   req: Request,
@@ -90,6 +94,51 @@ const getColumnByIdController = async (
         column,
       },
     });
+  } catch (err: unknown) {
+    next(err);
+  }
+};
+
+const getColumnsByBoardIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError(
+        'must be logged in to perform this action',
+      );
+    }
+
+    const { boardId } = GetColumnByBoardIdParams.parse(req.params);
+    const result = Board.safeParse(
+      await BoardModel.findByPk(boardId),
+    );
+
+    if (!result.success) {
+      throw new BoardNotFoundError('board does not exist');
+    }
+
+    const board = result.data;
+    const sessionUserId = req.session.user.id;
+    if (board.userId !== sessionUserId) {
+      throw new UnauthorizedActionError('not authorized to perform this action');
+    }
+
+    const columns = Columns.parse(
+      await ColumnModel.findAll({ where: { boardId } }),
+    );
+
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: {
+          columns,
+        },
+      });
   } catch (err: unknown) {
     next(err);
   }
@@ -232,6 +281,7 @@ const deleteColumnController = async (
 const controllers = {
   getColumnByIdController,
   getColumnsByUserIdController,
+  getColumnsByBoardIdController,
   createColumnController,
   updateColumnController,
   deleteColumnController,
