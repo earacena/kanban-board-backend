@@ -9,32 +9,47 @@ The frontend of this project is [here](https://github.com/earacena/kanban-board)
 
 ### Routes (WIP)
 
-* /api/boards
-  * POST   - /api/boards/             - creates a board
-  * GET    - /api/boards/:boardId     - retrieves board by id
-  * GET    - /api/boards/user/:userId - retrieves all boards with given userId
-  * PUT    - /api/boards/:boardId     - updates board with given id
-  * DELETE - /api/boards/:boardId     - delete board with given id
+#### /api/boards
 
-* /api/columns
-  * POST   - /api/columns/             -
-  * GET    - /api/columns/:columnId    -
-  * GET    - /api/columns/user/:userId -
-  * PUT    - /api/columns/:columnId    -
-  * DELETE - /api/columns/:columnId    -
+| Method | Route                    | Behavior                                |
+| ------ | ------                   | -----------                             |
+| POST   | /api/boards/             | creates a board                         |
+| GET    | /api/boards/:boardId     | retrieves board by id                   |
+| GET    | /api/boards/user/:userId | retrieves all boards with given userId  |
+| PUT    | /api/boards/:boardId     | updates board with given id             |
+| DELETE | /api/boards/:boardId     | delete board with given id              |
 
-* /api/cards
+#### /api/columns
+
+| Method | Route                     | Behavior
+|---     | ---                       | ---                                     |
+| POST   | /api/columns/             | creates a column                        |
+| GET    | /api/columns/:columnId    | retrieves column by id                  |
+| GET    | /api/columns/user/:userId | retrieves all columns with given userId |
+| PUT    | /api/columns/:columnId    | updates a column with given id          |
+| DELETE | /api/columns/:columnId    | deletes a column with given id          |
+
+#### /api/cards
   * WIP
 
-* /api/user
-  * POST   - /api/users/               - creates a user
-  * GET    - /api/users/fetch-user     - retrieves current user session
+#### /api/user
 
-* /login
-  * POST   -                            - creates a session with given user credentials
+| Method | Route                     | Behavior
+|---     | ---                       | ---                                     |
+| POST   | /api/users/               | creates a user                          |
+| GET    | /api/users/fetch-user     | retrieves current user session          |
 
-* /logout
-  * POST   -                            - destroys user session associated with request
+#### /login
+
+| Method | Route                     | Behavior
+|---     | ---                       | ---                                           |
+| POST   | /login                    | creates a session with given user credentials |
+
+#### /logout
+
+| Method | Route                     | Behavior
+|---     | ---                       | ---                                           |
+| POST   | /logout                   | destroys user session associated with request |
 
 ### Technologies
 
