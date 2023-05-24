@@ -33,7 +33,8 @@ export const DeleteColumnByIdParams = z.object({
 
 export const UpdatableColumnFields = z.object({
   label: z.string(),
-});
+}).strict();
+
 export const GetColumnByBoardIdParams = z.object({
   boardId: z.string(),
 });
