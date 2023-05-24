@@ -577,7 +577,7 @@ describe('Board API', () => {
       }
     });
 
-    test('returns request if board does not exist', async () => {
+    test('rejects request if board does not exist (400)', async () => {
       const testBoard = boards[0];
       const changes = { label: 'this label was updated' };
       (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
@@ -608,7 +608,7 @@ describe('Board API', () => {
       }
     });
 
-    test('rejects request if updating fields that dont exist', async () => {
+    test('rejects request if updating fields that dont exist (400)', async () => {
       const testBoard = boards[0];
       const changes = { label: 'this was updated', address: 'address was updated' };
       (Board.findByPk as jest.Mock).mockResolvedValueOnce(null);
