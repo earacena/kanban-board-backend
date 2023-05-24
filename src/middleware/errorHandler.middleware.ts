@@ -3,6 +3,7 @@ import { UniqueConstraintError, ValidationError } from 'sequelize';
 import { ZodError } from 'zod';
 import {
   BoardNotFoundError,
+  ColumnNotFoundError,
   IncorrectPasswordError, SessionError, UnauthorizedActionError, UserNotFoundError,
 } from '../utils/errors';
 
@@ -94,6 +95,21 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
         ],
       });
   } else if (err instanceof BoardNotFoundError) {
+    res
+      .status(400)
+      .json({
+        success: false,
+        errorType: 'base',
+        errors: [
+          {
+            code: 'invalid_request',
+            message: err.message,
+            path: '',
+            value: '',
+          },
+        ],
+      });
+  } else if (err instanceof ColumnNotFoundError) {
     res
       .status(400)
       .json({
