@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { Board, Boards } from './api/board/board.types';
 import { Column, Columns } from './api/column/column.types';
+import { Card, Cards } from './api/card/card.types';
 
 const ErrorPayload = z.object({
   code: z.union([z.string(), z.null()]),
@@ -47,5 +48,7 @@ export const BoardResponse = ApiResponse.and(z.object({ data: z.object({ board: 
 export const BoardsResponse = ApiResponse.and(z.object({ data: z.object({ boards: Boards }) }));
 export const ColumnResponse = ApiResponse.and(z.object({ data: z.object({ column: Column }) }));
 export const ColumnsResponse = ApiResponse.and(z.object({ data: z.object({ columns: Columns }) }));
+export const CardResponse = ApiResponse.and(z.object({ data: z.object({ card: Card }) }));
+export const CardsResponse = ApiResponse.and(z.object({ data: z.object({ cards: Cards }) }));
 export const ErrorResponse = ApiResponse.and(ErrorResponsePayload);
 export const SessionResponse = ApiResponse.and(z.object({ data: SessionPayload }));
