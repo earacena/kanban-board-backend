@@ -9,7 +9,7 @@
     "lint": "eslint . --ext .ts",
     "dev": "NODE_ENV=development ts-node-dev src/index.ts",
     "start": "node build/index.js",
-    "test": "NODE_ENV=testing jest --verbose --silent"
+    "test": "NODE_ENV=testing jest --verbose"
   },
   "repository": {
     "type": "git",
