@@ -27,6 +27,10 @@ Card.init(
     color: {
       type: DataTypes.TEXT,
     },
+    dateCreated: {
+      type: DataTypes.TEXT,
+      defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+    },
   },
   {
     sequelize,
