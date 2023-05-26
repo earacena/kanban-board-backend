@@ -5,3 +5,4 @@ export { default as UserNotFoundError } from './UserNotFoundError';
 export { default as UnauthorizedActionError } from './UnauthorizedActionError';
 export { default as BoardNotFoundError } from './BoardNotFoundError';
 export { default as ColumnNotFoundError } from './ColumnNotFoundError';
+export { default as CardNotFoundError } from './CardNotFoundError';
