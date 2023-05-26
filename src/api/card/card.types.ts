@@ -7,6 +7,7 @@ export const Card = z.object({
   brief: z.string(),
   body: z.optional(z.string()),
   color: z.optional(z.string()),
+  dateCreated: z.coerce.date(),
 });
 
 export const Cards = z.array(Card);
@@ -41,4 +42,5 @@ export const UpdatableCardFields = z.object({
   columnId: z.string(),
   body: z.string(),
   brief: z.string(),
+  color: z.string(),
 }).strict();
