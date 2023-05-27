@@ -38,6 +38,10 @@ export const DeleteCardsByColumnIdParams = z.object({
   columnId: z.string(),
 });
 
+export const UpdateCardByIdParams = z.object({
+  cardId: z.string(),
+});
+
 export const UpdatableCardFields = z.object({
   columnId: z.string(),
   body: z.string(),
