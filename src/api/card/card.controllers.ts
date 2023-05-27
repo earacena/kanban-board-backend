@@ -1,7 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
-import { ColumnNotFoundError, UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
 import {
-  Card, Cards, CreateCardPayload, DeleteCardByIdParams, DeleteCardsByColumnIdParams, GetCardByIdParams, GetCardsByColumnIdParams, UpdatableCardFields,
+  CardNotFoundError,
+  ColumnNotFoundError,
+  UnauthorizedActionError,
+  UserNotFoundError,
+} from '../../utils/errors';
+import {
+  Card,
+  Cards,
+  CreateCardPayload,
+  DeleteCardByIdParams,
+  UpdateCardByIdParams,
+  DeleteCardsByColumnIdParams,
+  GetCardByIdParams,
+  GetCardsByColumnIdParams,
+  UpdatableCardFields,
 } from './card.types';
 import { User } from '../user/user.types';
 import UserModel from '../user/user.model';
@@ -24,7 +37,9 @@ const createCardController = async (
 
     const newCardDetails = CreateCardPayload.parse(req.body);
 
-    const result = User.safeParse(await UserModel.findByPk(newCardDetails.userId));
+    const result = User.safeParse(
+      await UserModel.findByPk(newCardDetails.userId),
+    );
     if (!result.success) {
       throw new UserNotFoundError('user does not exist');
     }
@@ -37,9 +52,7 @@ const createCardController = async (
       );
     }
 
-    const newCard = Card.parse(
-      await CardModel.create({ ...newCardDetails }),
-    );
+    const newCard = Card.parse(await CardModel.create({ ...newCardDetails }));
 
     res.status(201).json({
       success: true,
@@ -66,7 +79,13 @@ const getCardByIdController = async (
     }
 
     const { cardId } = GetCardByIdParams.parse(req.params);
-    const card = Card.parse(await CardModel.findByPk(cardId));
+    const result = Card.safeParse(await CardModel.findByPk(cardId));
+
+    if (!result.success) {
+      throw new CardNotFoundError('card does not exist');
+    }
+
+    const card = result.data;
 
     const sessionUserId = req.session.user.id;
     const isUserAuthenticated = sessionUserId === card.userId;
@@ -101,9 +120,7 @@ const getCardsByColumnIdController = async (
     }
 
     const { columnId } = GetCardsByColumnIdParams.parse(req.params);
-    const result = Column.safeParse(
-      await ColumnModel.findByPk(columnId),
-    );
+    const result = Column.safeParse(await ColumnModel.findByPk(columnId));
 
     if (!result.success) {
       throw new ColumnNotFoundError('column does not exist');
@@ -112,12 +129,12 @@ const getCardsByColumnIdController = async (
     const column = result.data;
     const sessionUserId = req.session.user.id;
     if (column.userId !== sessionUserId) {
-      throw new UnauthorizedActionError('not authorized to perform this action');
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
     }
 
-    const cards = Cards.parse(
-      await CardModel.findAll({ where: { columnId } }),
-    );
+    const cards = Cards.parse(await CardModel.findAll({ where: { columnId } }));
 
     res
       .status(200)
@@ -145,16 +162,25 @@ const updateCardController = async (
       );
     }
 
-    const { cardId } = DeleteCardByIdParams.parse(req.params);
-    const { body, brief, columnId } = UpdatableCardFields.parse(req.body);
+    const { cardId } = UpdateCardByIdParams.parse(req.params);
+    const updates = UpdatableCardFields.parse(req.body);
 
-    const results = Column.safeParse(await ColumnModel.findByPk(columnId));
+    const cardResult = Card.safeParse(
+      await CardModel.findByPk(cardId),
+    );
 
-    if (!results.success) {
+    if (!cardResult.success) {
+      throw new CardNotFoundError('card does not exist');
+    }
+
+    const card = cardResult.data;
+    const columnResult = Column.safeParse(await ColumnModel.findByPk(card.columnId));
+
+    if (!columnResult.success) {
       throw new ColumnNotFoundError('column does not exist');
     }
 
-    const column = results.data;
+    const column = columnResult.data;
     const sessionUserId = req.session.user.id;
     if (column.userId !== sessionUserId) {
       throw new UnauthorizedActionError(
@@ -162,17 +188,17 @@ const updateCardController = async (
       );
     }
 
-    const updateResults = await ColumnModel.update(
-      { body, brief, columnId },
+    const updateResults = await CardModel.update(
+      { ...updates },
       { where: { id: cardId }, returning: true },
     );
 
-    const updatedColumn = Column.parse(updateResults[1][0]);
+    const updatedCard = Card.parse(updateResults[1][0]);
 
     res.status(200).json({
       success: true,
       data: {
-        column: updatedColumn,
+        card: updatedCard,
       },
     });
   } catch (err: unknown) {
@@ -238,7 +264,9 @@ const deleteCardsByColumnIdController = async (
 
     const { columnId } = DeleteCardsByColumnIdParams.parse(req.params);
 
-    const result = Cards.safeParse(await CardModel.findAll({ where: { columnId } }));
+    const result = Cards.safeParse(
+      await CardModel.findAll({ where: { columnId } }),
+    );
 
     if (!result.success) {
       // preserve idempotence
