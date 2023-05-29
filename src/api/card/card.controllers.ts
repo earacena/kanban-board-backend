@@ -264,24 +264,32 @@ const deleteCardsByColumnIdController = async (
 
     const { columnId } = DeleteCardsByColumnIdParams.parse(req.params);
 
-    const result = Cards.safeParse(
-      await CardModel.findAll({ where: { columnId } }),
-    );
+    const columnResult = Column.safeParse(await ColumnModel.findByPk(columnId));
 
-    if (!result.success) {
-      // preserve idempotence
-      res.status(200).json({ success: true });
-      return;
+    if (!columnResult.success) {
+      throw new ColumnNotFoundError('column does not exist');
     }
 
-    const cards = result.data;
-    const sessionUserId = req.session.user.id;
-    const card = cards[0];
+    const column = columnResult.data;
 
-    if (card === undefined || card.userId !== sessionUserId) {
-      throw new UnauthorizedActionError(
-        'not authorized to perform this action',
-      );
+    const sessionUserId = req.session.user.id;
+    if (column.userId !== sessionUserId) {
+      throw new UnauthorizedActionError('not authorized to perform this action');
+    }
+
+    const cardResult = Cards.safeParse(
+      await CardModel.findAll({ where: { id: column.id } }),
+    );
+
+    if (!cardResult.success) {
+      // preserve idempotence
+      res
+        .status(200)
+        .json({
+          success: true,
+        });
+
+      return;
     }
 
     await CardModel.destroy({
