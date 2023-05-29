@@ -16,7 +16,7 @@ cardRouter.get('/:cardId', getCardByIdController);
 cardRouter.get('/column/:columnId', getCardsByColumnIdController);
 cardRouter.post('/', createCardController);
 cardRouter.delete('/:cardId', deleteCardController);
-cardRouter.delete('/:columnId', deleteCardsByColumnIdController);
+cardRouter.delete('/column/:columnId', deleteCardsByColumnIdController);
 cardRouter.put('/:cardId', updateCardController);
 
 export default cardRouter;
