@@ -488,6 +488,41 @@ describe('Card API', () => {
       }
     });
 
+    test('deletes cards by column id (200)', async () => {
+      const columnCards = cards.filter((c) => c.columnId === columnId);
+      (Column.findByPk as jest.Mock).mockResolvedValueOnce(mockColumn);
+      (Card.findAll as jest.Mock).mockResolvedValueOnce(columnCards);
+
+      const response = await agent
+        .delete(`/api/cards/column/${columnId}`);
+
+      const responseData = ApiResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(true);
+    });
+
+    test('rejects deletion of cards by column if user did not create column', async () => {
+      (Column.findByPk as jest.Mock).mockResolvedValueOnce({
+        ...mockColumn,
+        userId: alternativeUserId,
+      });
+
+      const response = await agent
+        .delete(`/api/cards/column/${alternativeUserId}`)
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'not authorized to perform this action',
+        },
+      ]);
+    });
+
     test('returns 200 even if card does not exist (200)', async () => {
       (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
 
