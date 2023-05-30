@@ -13,6 +13,10 @@ Activity.init(
       type: DataTypes.UUIDV4(),
       allowNull: false,
     },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
     dateCreated: {
       type: DataTypes.DATE,
       defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
