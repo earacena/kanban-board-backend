@@ -49,7 +49,12 @@ const createActivityController = async (
 
     res
       .status(201)
-      .json(newActivity);
+      .json({
+        success: true,
+        data: {
+          activity: newActivity,
+        },
+      });
   } catch (err: unknown) {
     next(err);
   }
