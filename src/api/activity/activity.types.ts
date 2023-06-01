@@ -5,13 +5,13 @@ export const Activity = z.object({
   userId: z.string().uuid(),
   cardId: z.string().uuid(),
   description: z.string(),
-  dateCreated: z.coerce.string(),
+  dateCreated: z.coerce.date(),
 });
+
+export const Activities = z.array(Activity);
 
 export const CreateActivityPayload = z.object({
-    cardId: z.string().uuid(),
-    userId: z.string().uuid(),
-    description: z.string(),
+  cardId: z.string().uuid(),
+  userId: z.string().uuid(),
+  description: z.string(),
 });
-
-
