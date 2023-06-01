@@ -13,6 +13,10 @@ Activity.init(
       type: DataTypes.UUIDV4(),
       allowNull: false,
     },
+    userId: {
+      type: DataTypes.UUIDV4(),
+      allowNull: false,
+    },
     description: {
       type: DataTypes.TEXT,
       allowNull: false,
