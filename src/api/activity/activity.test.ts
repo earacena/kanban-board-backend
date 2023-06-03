@@ -5,7 +5,7 @@ import app from '../../app';
 import User from '../user/user.model';
 import Card from '../card/card.model';
 import Activity from './activity.model';
-import { ActivityResponse } from '../../app.types';
+import { ActivitiesResponse, ActivityResponse } from '../../app.types';
 
 const agent = supertest.agent(app.app);
 // const api = supertest(app.app);
@@ -101,6 +101,23 @@ describe('Activity API', () => {
         if (err) { done(err); }
         done();
       });
+  });
+
+  describe('when getting activities', () => {
+    test('returns activities with given card id (200)', async () => {
+      const testActivities = activities.filter((a) => a.cardId === cardId);
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Activity.findAll as jest.Mock).mockResolvedValueOnce(testActivities);
+
+      const response = await agent
+        .get(`/api/activity/${cardId}`)
+        .expect(200);
+
+      const responseData = ActivitiesResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(true);
+      expect(responseData.data).toBeDefined();
+      expect(responseData.data.activities).toStrictEqual(testActivities);
+    });
   });
 
   describe('when creating activity entries', () => {
