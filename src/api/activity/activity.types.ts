@@ -16,6 +16,6 @@ export const CreateActivityPayload = z.object({
   description: z.string(),
 });
 
-export const GetActivitiesByCardIdPayload = z.object({
+export const GetActivitiesByCardIdParams = z.object({
   cardId: z.string(),
 });

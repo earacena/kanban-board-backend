@@ -7,7 +7,12 @@ import { CardNotFoundError, UnauthorizedActionError } from '../../utils/errors';
 import { Card } from '../card/card.types';
 import CardModel from '../card/card.model';
 import ActivityModel from './activity.model';
-import { CreateActivityPayload, Activity, Activities, GetActivitiesByCardIdPayload } from './activity.types';
+import {
+  CreateActivityPayload,
+  Activity,
+  Activities,
+  GetActivitiesByCardIdParams,
+} from './activity.types';
 
 const createActivityController = async (
   req: Request,
@@ -73,7 +78,7 @@ const getActivitiesByCardIdController = async (
       );
     }
 
-    const { cardId } = GetActivitiesByCardIdPayload.parse(req.body);
+    const { cardId } = GetActivitiesByCardIdParams.parse(req.params);
 
     const cardResult = Card.safeParse(
       await CardModel.findByPk(cardId),
