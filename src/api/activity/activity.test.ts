@@ -5,10 +5,10 @@ import app from '../../app';
 import User from '../user/user.model';
 import Card from '../card/card.model';
 import Activity from './activity.model';
-import { ActivitiesResponse, ActivityResponse } from '../../app.types';
+import { ActivitiesResponse, ActivityResponse, ErrorResponse } from '../../app.types';
 
 const agent = supertest.agent(app.app);
-// const api = supertest(app.app);
+const api = supertest(app.app);
 
 jest.mock('sequelize');
 jest.mock('argon2');
@@ -118,6 +118,65 @@ describe('Activity API', () => {
       expect(responseData.data).toBeDefined();
       expect(responseData.data.activities).toStrictEqual(testActivities);
     });
+
+    test('rejects request if there is no valid user session (401)', async () => {
+      const response = await api
+        .get(`/api/activity/${cardId}`)
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([{
+        code: 'unauthorized_action',
+        value: '',
+        path: '',
+        message: 'must be logged in to perform this action',
+      }]);
+    });
+
+    test('rejects request if user did not create the card (401)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce({
+        ...mockCard,
+        userId: alternativeUserId,
+      });
+      const response = await agent
+        .get(`/api/activity/${cardId}`)
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'not authorized to perform this action',
+        },
+      ]);
+    });
+
+    test('rejects request if card does not exist', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      const response = await agent
+        .get(`/api/activity/${cardId}`)
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'card does not exist',
+        },
+      ]);
+    });
   });
 
   describe('when creating activity entries', () => {
@@ -138,6 +197,79 @@ describe('Activity API', () => {
       const responseData = ActivityResponse.parse(JSON.parse(response.text));
       expect(responseData.success).toBe(true);
       expect(responseData.data?.activity).toStrictEqual(activity);
+    });
+
+    test('rejects request if there is no valid user session (401)', async () => {
+      const response = await api
+        .post('/api/activity')
+        .send({
+          userId,
+          cardId,
+          description: 'activity description 1',
+        })
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([{
+        code: 'unauthorized_action',
+        value: '',
+        path: '',
+        message: 'must be logged in to perform this action',
+      }]);
+    });
+
+    test('rejects request if user did not create the card (401)', async () => {
+      const activity = activities[0];
+      (Card.findByPk as jest.Mock).mockReturnValueOnce({ ...mockCard, userId: alternativeUserId });
+      (Activity.create as jest.Mock).mockResolvedValueOnce(activity);
+      const response = await agent
+        .post('/api/activity/')
+        .send({
+          userId,
+          cardId,
+          description: 'activity description 1',
+        })
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'not authorized to perform this action',
+        },
+      ]);
+    });
+
+    test('rejects request if card does not exist', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      const response = await agent
+        .post('/api/activity/')
+        .send({
+          userId,
+          cardId,
+          description: 'activity description 1',
+        })
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'card does not exist',
+        },
+      ]);
     });
   });
 });
