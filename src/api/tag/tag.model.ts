@@ -9,6 +9,10 @@ Tag.init(
       primaryKey: true,
       defaultValue: Sequelize.literal('gen_random_uuid()'),
     },
+    cardId: {
+      type: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     label: {
       type: DataTypes.TEXT,
       allowNull: false,
