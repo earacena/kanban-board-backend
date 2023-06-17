@@ -9,6 +9,9 @@ export const Tag = z.object({
 
 export const Tags = z.array(Tag);
 
+export type TagType = z.infer<typeof Tag>;
+export type TagArrayType = z.infer<typeof Tags>;
+
 export const CreateTagPayload = z.object({
   cardId: z.string().uuid(),
   userId: z.string().uuid(),
