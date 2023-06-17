@@ -4,6 +4,7 @@ import { Board, Boards } from './api/board/board.types';
 import { Column, Columns } from './api/column/column.types';
 import { Card, Cards } from './api/card/card.types';
 import { Activities, Activity } from './api/activity/activity.types';
+import { Tag, Tags } from './api/tag/tag.types';
 
 const ErrorPayload = z.object({
   code: z.union([z.string(), z.null()]),
@@ -57,5 +58,8 @@ export const ActivityResponse = ApiResponse.and(
 export const ActivitiesResponse = ApiResponse.and(
   z.object({ data: z.object({ activities: Activities }) }),
 );
+export const TagResponse = ApiResponse.and(z.object({ data: z.object({ tag: Tag }) }));
+export const TagsResponse = ApiResponse.and(z.object({ data: z.object({ tags: Tags }) }));
+
 export const ErrorResponse = ApiResponse.and(ErrorResponsePayload);
 export const SessionResponse = ApiResponse.and(z.object({ data: SessionPayload }));
