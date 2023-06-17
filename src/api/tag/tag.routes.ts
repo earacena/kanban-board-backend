@@ -3,14 +3,14 @@ import tagControllers from './tag.controllers';
 
 const {
   createTagController,
-  getTagsByCardIdController,
+  getTagsByUserIdController,
   deleteTagController,
 } = tagControllers;
 
 const tagRouter = Router();
 
 tagRouter.post('/', createTagController);
-tagRouter.get('/:cardId', getTagsByCardIdController);
+tagRouter.get('/user/:userId', getTagsByUserIdController);
 tagRouter.delete('/:tagId', deleteTagController);
 
 export default tagRouter;
