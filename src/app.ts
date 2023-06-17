@@ -21,6 +21,7 @@ import boardRouter from './api/board/board.routes';
 import columnRouter from './api/column/column.routes';
 import cardRouter from './api/card/card.routes';
 import activityRouter from './api/activity/activity.routes';
+import tagRouter from './api/tag/tag.routes';
 
 const app = express();
 
@@ -84,7 +85,8 @@ app.use('/api/users', userRouter);
 app.use('/api/boards', boardRouter);
 app.use('/api/columns', columnRouter);
 app.use('/api/cards', cardRouter);
-app.use('/api/activity', activityRouter);
+app.use('/api/activities', activityRouter);
+app.use('/api/tags', tagRouter);
 
 // Post-route middleware
 app.use(errorHandler);
