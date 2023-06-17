@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const Tag = z.object({
   id: z.string().uuid(),
+  userId: z.string().uuid(),
   cardId: z.string().uuid(),
   label: z.string(),
   color: z.string(),
@@ -19,8 +20,8 @@ export const CreateTagPayload = z.object({
   color: z.string(),
 });
 
-export const GetTagsByCardIdParams = z.object({
-  cardId: z.string(),
+export const GetTagsByUserIdParams = z.object({
+  userId: z.string(),
 });
 
 export const DeleteTagByIdParams = z.object({

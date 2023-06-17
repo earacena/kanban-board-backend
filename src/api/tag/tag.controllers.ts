@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from 'express';
-import { CardNotFoundError, UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
+import { UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
 import { User } from '../user/user.types';
 import UserModel from '../user/user.model';
-import CardModel from '../card/card.model';
-import TagModel from '../tag/tag.model';
-import { Card } from '../card/card.types';
-import { CreateTagPayload, DeleteTagByIdParams, GetTagsByCardIdParams, Tag, Tags } from './tag.types';
+import TagModel from './tag.model';
+import {
+  CreateTagPayload, DeleteTagByIdParams, GetTagsByUserIdParams, Tag, Tags,
+} from './tag.types';
 
 const createTagController = async (
   req: Request,
@@ -55,7 +55,7 @@ const createTagController = async (
   }
 };
 
-const getTagsByCardIdController = async (
+const getTagsByUserIdController = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -68,23 +68,23 @@ const getTagsByCardIdController = async (
       );
     }
 
-    const { cardId } = GetTagsByCardIdParams.parse(req.params);
-    const result = Card.safeParse(
-      await CardModel.findByPk(cardId),
+    const { userId } = GetTagsByUserIdParams.parse(req.params);
+    const result = User.safeParse(
+      await UserModel.findByPk(userId),
     );
 
     if (!result.success) {
-      throw new CardNotFoundError('card does not exist');
+      throw new UserNotFoundError('user does not exist');
     }
 
-    const card = result.data;
+    const user = result.data;
     const sessionUserId = req.session.user.id;
-    if (card.userId !== sessionUserId) {
+    if (user.id !== sessionUserId) {
       throw new UnauthorizedActionError('not authorized to perform this action');
     }
 
     const tags = Tags.parse(
-      await TagModel.findAll({ where: { cardId } }),
+      await TagModel.findAll({ where: { userId } }),
     );
 
     res
@@ -125,6 +125,13 @@ const deleteTagController = async (
 
     const tag = result.data;
 
+    const sessionUserId = req.session.id;
+    if (tag.userId !== sessionUserId) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
+    }
+
     await TagModel.destroy({
       where: {
         id: tag.id,
@@ -139,7 +146,7 @@ const deleteTagController = async (
 
 const tagControllers = {
   createTagController,
-  getTagsByCardIdController,
+  getTagsByUserIdController,
   deleteTagController,
 };
 
