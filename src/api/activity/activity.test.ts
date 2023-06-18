@@ -55,6 +55,7 @@ describe('Activity API', () => {
       id: uuidv4(),
       cardId,
       userId,
+      type: 'contribution',
       description: 'activity description 1',
       dateCreated: new Date(),
     },
@@ -62,6 +63,7 @@ describe('Activity API', () => {
       id: uuidv4(),
       cardId: alternativeCardId,
       userId: alternativeUserId,
+      type: 'contribution',
       description: 'activity description 2',
       dateCreated: new Date(),
     },
@@ -69,6 +71,7 @@ describe('Activity API', () => {
       id: uuidv4(),
       cardId,
       userId,
+      type: 'contribution',
       description: 'activity description 3',
       dateCreated: new Date(),
     },
@@ -76,6 +79,7 @@ describe('Activity API', () => {
       id: uuidv4(),
       cardId: alternativeCardId,
       userId: alternativeUserId,
+      type: 'contribution',
       description: 'activity description 4',
       dateCreated: new Date(),
     },
@@ -83,6 +87,7 @@ describe('Activity API', () => {
       id: uuidv4(),
       cardId,
       userId,
+      type: 'contribution',
       description: 'activity description 5',
       dateCreated: new Date(),
     },
@@ -110,7 +115,7 @@ describe('Activity API', () => {
       (Activity.findAll as jest.Mock).mockResolvedValueOnce(testActivities);
 
       const response = await agent
-        .get(`/api/activity/${cardId}`)
+        .get(`/api/activities/${cardId}`)
         .expect(200);
 
       const responseData = ActivitiesResponse.parse(JSON.parse(response.text));
@@ -121,7 +126,7 @@ describe('Activity API', () => {
 
     test('rejects request if there is no valid user session (401)', async () => {
       const response = await api
-        .get(`/api/activity/${cardId}`)
+        .get(`/api/activities/${cardId}`)
         .expect(401);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
@@ -141,7 +146,7 @@ describe('Activity API', () => {
         userId: alternativeUserId,
       });
       const response = await agent
-        .get(`/api/activity/${cardId}`)
+        .get(`/api/activities/${cardId}`)
         .expect(401);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
@@ -161,7 +166,7 @@ describe('Activity API', () => {
     test('rejects request if card does not exist', async () => {
       (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
       const response = await agent
-        .get(`/api/activity/${cardId}`)
+        .get(`/api/activities/${cardId}`)
         .expect(400);
 
       const responseData = ErrorResponse.parse(JSON.parse(response.text));
@@ -186,10 +191,11 @@ describe('Activity API', () => {
       (Activity.create as jest.Mock).mockResolvedValueOnce(activity);
 
       const response = await agent
-        .post('/api/activity/')
+        .post('/api/activities/')
         .send({
           userId,
           cardId,
+          type: 'contribution',
           description: 'activity description 1',
         })
         .expect(201);
@@ -201,10 +207,11 @@ describe('Activity API', () => {
 
     test('rejects request if there is no valid user session (401)', async () => {
       const response = await api
-        .post('/api/activity')
+        .post('/api/activities')
         .send({
           userId,
           cardId,
+          type: 'contribution',
           description: 'activity description 1',
         })
         .expect(401);
@@ -225,10 +232,11 @@ describe('Activity API', () => {
       (Card.findByPk as jest.Mock).mockReturnValueOnce({ ...mockCard, userId: alternativeUserId });
       (Activity.create as jest.Mock).mockResolvedValueOnce(activity);
       const response = await agent
-        .post('/api/activity/')
+        .post('/api/activities/')
         .send({
           userId,
           cardId,
+          type: 'contribution',
           description: 'activity description 1',
         })
         .expect(401);
@@ -250,10 +258,11 @@ describe('Activity API', () => {
     test('rejects request if card does not exist', async () => {
       (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
       const response = await agent
-        .post('/api/activity/')
+        .post('/api/activities/')
         .send({
           userId,
           cardId,
+          type: 'contribution',
           description: 'activity description 1',
         })
         .expect(400);
