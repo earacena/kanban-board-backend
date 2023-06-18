@@ -10,11 +10,15 @@ Activity.init(
       defaultValue: Sequelize.literal('gen_random_uuid()'),
     },
     cardId: {
-      type: DataTypes.UUIDV4(),
+      type: DataTypes.UUIDV4,
       allowNull: false,
     },
     userId: {
-      type: DataTypes.UUIDV4(),
+      type: DataTypes.UUIDV4,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     description: {
