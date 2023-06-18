@@ -27,7 +27,9 @@ const createActivityController = async (
       );
     }
 
-    const { cardId, userId, description } = CreateActivityPayload.parse(req.body);
+    const {
+      cardId, userId, type, description,
+    } = CreateActivityPayload.parse(req.body);
 
     const cardResult = Card.safeParse(
       await CardModel.findByPk(cardId),
@@ -48,6 +50,7 @@ const createActivityController = async (
       await ActivityModel.create({
         userId,
         cardId,
+        type,
         description,
       }),
     );
