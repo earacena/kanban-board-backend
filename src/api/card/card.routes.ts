@@ -5,6 +5,7 @@ const {
   createCardController,
   getCardByIdController,
   getCardsByColumnIdController,
+  getCardsByUserIdController,
   deleteCardController,
   deleteCardsByColumnIdController,
   updateCardController,
@@ -14,6 +15,7 @@ const cardRouter = Router();
 
 cardRouter.get('/:cardId', getCardByIdController);
 cardRouter.get('/column/:columnId', getCardsByColumnIdController);
+cardRouter.get('/user/:userId', getCardsByUserIdController);
 cardRouter.post('/', createCardController);
 cardRouter.delete('/:cardId', deleteCardController);
 cardRouter.delete('/column/:columnId', deleteCardsByColumnIdController);
