@@ -29,7 +29,7 @@ const app = express();
 app.use(
   cors({
     origin: CORS_ORIGIN,
-    methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
+    methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'DELETE', 'HEAD'],
     credentials: true,
   }),
 );
