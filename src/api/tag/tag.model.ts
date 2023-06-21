@@ -13,6 +13,10 @@ Tag.init(
       type: DataTypes.UUIDV4,
       allowNull: false,
     },
+    userId: {
+      type: DataTypes.UUIDV4,
+      allowNull: false,
+    },
     label: {
       type: DataTypes.TEXT,
       allowNull: false,
