@@ -5,8 +5,8 @@ export const Card = z.object({
   userId: z.string().uuid(),
   columnId: z.string().uuid(),
   brief: z.string(),
-  body: z.optional(z.string()),
-  color: z.optional(z.string()),
+  body: z.string(),
+  color: z.string(),
   dateCreated: z.coerce.date(),
 });
 
@@ -16,7 +16,8 @@ export const CreateCardPayload = z.object({
   userId: z.string(),
   columnId: z.string(),
   brief: z.string(),
-  body: z.optional(z.string()),
+  body: z.string(),
+  color: z.string(),
 });
 
 export type CardType = z.infer<typeof Card>;
@@ -28,6 +29,10 @@ export const GetCardByIdParams = z.object({
 
 export const GetCardsByColumnIdParams = z.object({
   columnId: z.string(),
+});
+
+export const GetCardsByUserIdParams = z.object({
+  userId: z.string(),
 });
 
 export const DeleteCardByIdParams = z.object({
