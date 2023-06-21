@@ -15,6 +15,7 @@ import {
   GetCardByIdParams,
   GetCardsByColumnIdParams,
   UpdatableCardFields,
+  GetCardsByUserIdParams,
 } from './card.types';
 import { User } from '../user/user.types';
 import UserModel from '../user/user.model';
@@ -99,6 +100,49 @@ const getCardByIdController = async (
       success: true,
       data: {
         card,
+      },
+    });
+  } catch (err: unknown) {
+    next(err);
+  }
+};
+
+const getCardsByUserIdController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError(
+        'must be logged in to perform this action',
+      );
+    }
+
+    const { userId } = GetCardsByUserIdParams.parse(req.params);
+
+    const result = User.safeParse(await UserModel.findByPk(userId));
+    if (!result.success) {
+      throw new UserNotFoundError(`user does not exist: ${userId}`);
+    }
+
+    const sessionUserId = req.session.user.id;
+    const isUserAuthenticated = sessionUserId === userId;
+    if (!isUserAuthenticated) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform that action',
+      );
+    }
+
+    const cards = Cards.parse(
+      await CardModel.findAll({ where: { userId } }),
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        cards,
       },
     });
   } catch (err: unknown) {
@@ -308,6 +352,7 @@ const controllers = {
   createCardController,
   getCardByIdController,
   getCardsByColumnIdController,
+  getCardsByUserIdController,
   updateCardController,
   deleteCardController,
   deleteCardsByColumnIdController,
