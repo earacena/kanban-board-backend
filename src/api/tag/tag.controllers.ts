@@ -129,8 +129,7 @@ const deleteTagController = async (
     }
 
     const tag = result.data;
-
-    const sessionUserId = req.session.id;
+    const sessionUserId = req.session.user.id;
     if (tag.userId !== sessionUserId) {
       throw new UnauthorizedActionError(
         'not authorized to perform this action',
