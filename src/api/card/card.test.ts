@@ -142,6 +142,21 @@ describe('Card API', () => {
       expect(responseData.data?.cards).toStrictEqual(userCards);
     });
 
+    test('retrieves cards by userId (200)', async () => {
+      const userCards = cards.filter((c) => c.userId === userId);
+      (Card.findAll as jest.Mock).mockResolvedValueOnce(userCards);
+
+      const response = await agent
+        .get(`/api/cards/user/${userId}`)
+        .expect(200);
+
+      const responseData = CardsResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(true);
+      expect(responseData.data).toBeDefined();
+      expect(responseData.data?.cards).toStrictEqual(userCards);
+    });
+
     test('rejects retrieving cards by columnId if user did not create column (401)', async () => {
       const userCards = cards.filter((c) => c.columnId === alternativeColumnId);
       (Column.findByPk as jest.Mock).mockResolvedValueOnce({
@@ -215,6 +230,28 @@ describe('Card API', () => {
       }
     });
 
+    test('rejects card fetch request by userId if there is no valid user session (401)', async () => {
+      const userCards = cards.filter((c) => c.userId === userId);
+      (Card.findAll as jest.Mock).mockResolvedValueOnce(userCards);
+
+      const response = await api
+        .get(`/api/cards/user/${userId}`)
+        .expect(401);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(false);
+      expect(responseData.errors).toBeDefined();
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'must be logged in to perform this action',
+        },
+      ]);
+    });
+
     test('rejects card fetch request by id if not the user who created it (401)', async () => {
       (Card.findByPk as jest.Mock).mockResolvedValueOnce(cards[1]);
       const testCard = cards[1];
@@ -238,6 +275,18 @@ describe('Card API', () => {
       } else {
         throw new Error('undefined test data');
       }
+    });
+
+    test('rejects request of cards if userId does not exist (400)', async () => {
+      (User.findByPk as jest.Mock).mockResolvedValue(null);
+      const response = await agent
+        .get(`/api/cards/user/${uuidv4()}`)
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBeDefined();
+      expect(responseData.success).toBe(false);
+      expect(responseData.errors).toBeDefined();
     });
 
     test('rejects request if card does not exist (400)', async () => {
@@ -300,6 +349,7 @@ describe('Card API', () => {
           columnId,
           brief: 'new card brief',
           body: 'new card body',
+          color: '#000000',
         })
         .expect(201);
 
@@ -317,6 +367,7 @@ describe('Card API', () => {
         columnId,
         brief: 'new card brief',
         body: 'new card body',
+        color: '#000000',
         dateCreated: new Date(),
       };
 
@@ -329,6 +380,7 @@ describe('Card API', () => {
           columnId,
           brief: 'new card brief',
           body: 'new card body',
+          color: '#000000',
         })
         .expect(400);
 
@@ -346,7 +398,7 @@ describe('Card API', () => {
       ]);
     });
 
-    test('rejects request if columnId and/or brief and/or userId are not supplied (400)', async () => {
+    test('rejects request if columnId/brief/userId/body/color are not supplied (400)', async () => {
       let response = await agent
         .post('/api/cards')
         .send({
@@ -365,12 +417,24 @@ describe('Card API', () => {
           message: 'Required',
           path: ['brief'],
         },
+        {
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['body'],
+        },
+        {
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['color'],
+        },
       ]);
 
       response = await agent
         .post('/api/cards')
         .send({
+          body: 'new card body',
           brief: 'new card brief',
+          color: '#000000',
         })
         .expect(400);
 
@@ -416,6 +480,16 @@ describe('Card API', () => {
           message: 'Required',
           path: ['brief'],
         },
+        {
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['body'],
+        },
+        {
+          code: 'invalid_type',
+          message: 'Required',
+          path: ['color'],
+        },
       ]);
     });
 
@@ -431,6 +505,8 @@ describe('Card API', () => {
           userId: alternativeUserId,
           columnId: uuidv4(),
           brief: 'test card brief',
+          body: 'test card body',
+          color: '#000000',
         })
         .expect(401);
 
