@@ -177,7 +177,7 @@ describe('Column API', () => {
       const testColumn = columns[0];
       if (testColumn) {
         const response = await api
-          .get(`/api/boards/${testColumn.id}`)
+          .get(`/api/columns/${testColumn.id}`)
           .expect(401);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
@@ -201,7 +201,7 @@ describe('Column API', () => {
       const testColumn = columns[0];
       if (testColumn) {
         const response = await api
-          .get(`/api/boards/user/${testColumn.userId}`)
+          .get(`/api/columns/user/${testColumn.userId}`)
           .expect(401);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
@@ -253,7 +253,7 @@ describe('Column API', () => {
       const testColumn = columns[1];
       if (testColumn) {
         const response = await agent
-          .get(`/api/boards/user/${testColumn.userId}`)
+          .get(`/api/columns/user/${testColumn.userId}`)
           .expect(401);
 
         const responseData = ErrorResponse.parse(JSON.parse(response.text));
