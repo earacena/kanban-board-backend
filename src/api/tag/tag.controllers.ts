@@ -41,7 +41,12 @@ const createTagController = async (
     }
 
     const newTag = Tag.parse(
-      await TagModel.create({ cardId, label, color }),
+      await TagModel.create({
+        userId,
+        cardId,
+        label,
+        color,
+      }),
     );
 
     res.status(201).json({
