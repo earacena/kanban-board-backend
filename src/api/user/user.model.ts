@@ -16,8 +16,10 @@ User.init({
       msg: 'username must be unique',
     },
     validate: {
-      len: [8, 64],
-      msg: 'username must contain 8 to 64 characters',
+      len: {
+        args: [8, 64],
+        msg: 'username must contain 8 to 64 characters',
+      },
     },
   },
   name: {
