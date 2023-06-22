@@ -21,7 +21,15 @@ export const CreateTagPayload = z.object({
 });
 
 export const GetTagsByUserIdParams = z.object({
-  userId: z.string(),
+  userId: z.string().uuid(),
+});
+
+export const AddCardIdToTagParams = z.object({
+  tagId: z.string().uuid(),
+});
+
+export const AddCardIdToTagPayload = z.object({
+  cardId: z.string().uuid(),
 });
 
 export const DeleteTagByIdParams = z.object({
