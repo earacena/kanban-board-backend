@@ -41,7 +41,7 @@ CREATE TABLE tags (
   color TEXT NOT NULL
 );
 
-CREATE TABLE activity (
+CREATE TABLE activities (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   card_id uuid NOT NULL,
   user_id uuid NOT NULL,
