@@ -43,7 +43,7 @@ const createTagController = async (
     const newTag = Tag.parse(
       await TagModel.create({
         userId,
-        cardId,
+        cardIds: [cardId],
         label,
         color,
       }),
@@ -148,10 +148,61 @@ const deleteTagController = async (
   }
 };
 
+const addCardIdToTagController = (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError(
+        'must be logged in to perform this action',
+      );
+    }
+
+    const { tagId } = AddCardIdToTagParams.parse(req.params);
+    const { cardId } = AddCardIdToTagPayload.parse(req.body);
+
+    const results = Card.safeParse(await CardModel.findByPk(cardId));
+
+    if (!results.success) {
+      throw new ColumnNotFoundError('column does not exist');
+    }
+
+    const card = results.data;
+    const sessionUserId = req.session.user.id;
+    if (card.userId !== sessionUserId) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
+    }
+
+    const tag = Tag.parse(await TagModel.findByPk(tagId))
+
+    const updateResults = await TagModel.update(
+      { cardIds: tag.cardIds.concat(cardId) },
+      { where: { id: tag.id }, returning: true },
+    );
+
+    const updatedColumn = Tag.parse(updateResults[1][0]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        tag: updatedTag,
+      },
+    });
+  } catch (error: unknown) {
+    next(error);
+  }
+};
+
 const tagControllers = {
   createTagController,
   getTagsByUserIdController,
   deleteTagController,
+  addCardIdToTagController,
 };
 
 export default tagControllers;
