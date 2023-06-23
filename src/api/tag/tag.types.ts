@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const Tag = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
-  cardId: z.string().uuid(),
+  cardIds: z.array(z.string().uuid()),
   label: z.string(),
   color: z.string(),
 });
