@@ -6,6 +6,7 @@ import User from '../user/user.model';
 import Card from '../card/card.model';
 import Activity from './activity.model';
 import { ActivitiesResponse, ActivityResponse, ErrorResponse } from '../../app.types';
+import { ActivityArrayType } from './activity.types';
 
 const agent = supertest.agent(app.app);
 const api = supertest(app.app);
@@ -31,7 +32,6 @@ describe('Activity API', () => {
   const alternativeCardId = uuidv4();
 
   const columnId = uuidv4();
-  const alternativeColumnId = uuidv4();
 
   const mockUser = {
     id: userId,
@@ -47,10 +47,11 @@ describe('Activity API', () => {
     columnId,
     brief: 'mock brief',
     body: 'mock body',
+    color: '#AAAAAA',
     dateCreated: new Date(),
   };
 
-  const activities = [
+  const activities: ActivityArrayType = [
     {
       id: uuidv4(),
       cardId,
