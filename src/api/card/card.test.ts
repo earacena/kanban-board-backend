@@ -56,6 +56,7 @@ describe('Card API', () => {
       columnId,
       brief: 'Test label 1',
       body: 'Test body 1',
+      color: '#AAAAAA',
       dateCreated: new Date(),
     },
     {
@@ -64,6 +65,7 @@ describe('Card API', () => {
       columnId: alternativeColumnId,
       brief: 'Test brief 2',
       body: 'Test body 1',
+      color: '#AAAAAA',
       dateCreated: new Date(),
     },
     {
@@ -72,6 +74,7 @@ describe('Card API', () => {
       columnId,
       brief: 'Test brief 3',
       body: 'Test body 2',
+      color: '#AAAAAA',
       dateCreated: new Date(),
     },
     {
@@ -79,6 +82,8 @@ describe('Card API', () => {
       userId: alternativeUserId,
       columnId: alternativeColumnId,
       brief: 'Test brief 4',
+      body: 'Test brief 4',
+      color: '#AAAAAA',
       dateCreated: new Date(),
     },
     {
@@ -86,6 +91,8 @@ describe('Card API', () => {
       userId,
       columnId: uuidv4(),
       brief: 'Test brief 5',
+      body: 'Test brief 5',
+      color: '#AAAAAA',
       dateCreated: new Date(),
     },
   ];
@@ -337,6 +344,7 @@ describe('Card API', () => {
         columnId,
         brief: 'new card brief',
         body: 'new card body',
+        color: '#AAAAAA',
         dateCreated: new Date(),
       };
 
