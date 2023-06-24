@@ -5,7 +5,11 @@ import {
   BoardNotFoundError,
   CardNotFoundError,
   ColumnNotFoundError,
-  IncorrectPasswordError, SessionError, UnauthorizedActionError, UserNotFoundError,
+  IncorrectPasswordError,
+  SessionError,
+  TagNotFoundError,
+  UnauthorizedActionError,
+  UserNotFoundError,
 } from '../utils/errors';
 
 interface BaseErrorPayload {
@@ -95,37 +99,12 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
           },
         ],
       });
-  } else if (err instanceof BoardNotFoundError) {
-    res
-      .status(400)
-      .json({
-        success: false,
-        errorType: 'base',
-        errors: [
-          {
-            code: 'invalid_request',
-            message: err.message,
-            path: '',
-            value: '',
-          },
-        ],
-      });
-  } else if (err instanceof ColumnNotFoundError) {
-    res
-      .status(400)
-      .json({
-        success: false,
-        errorType: 'base',
-        errors: [
-          {
-            code: 'invalid_request',
-            message: err.message,
-            path: '',
-            value: '',
-          },
-        ],
-      });
-  } else if (err instanceof CardNotFoundError) {
+  } else if (
+    err instanceof BoardNotFoundError
+    || err instanceof ColumnNotFoundError
+    || err instanceof CardNotFoundError
+    || err instanceof TagNotFoundError
+  ) {
     res
       .status(400)
       .json({
@@ -147,12 +126,12 @@ const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
         success: false,
         errorType: 'base',
         errors:
-        [
-          {
-            code: 'unknown error',
-            message: 'internal server error',
-          },
-        ],
+          [
+            {
+              code: 'unknown error',
+              message: 'internal server error',
+            },
+          ],
       });
   }
 
