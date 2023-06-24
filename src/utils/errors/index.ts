@@ -6,3 +6,4 @@ export { default as UnauthorizedActionError } from './UnauthorizedActionError';
 export { default as BoardNotFoundError } from './BoardNotFoundError';
 export { default as ColumnNotFoundError } from './ColumnNotFoundError';
 export { default as CardNotFoundError } from './CardNotFoundError';
+export { default as TagNotFoundError } from './TagNotFoundError';
