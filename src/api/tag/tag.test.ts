@@ -5,8 +5,10 @@ import { v4 as uuidv4 } from 'uuid';
 import app from '../../app';
 import User from '../user/user.model';
 import Tag from './tag.model';
-import { ApiResponse, ErrorResponse, TagResponse, TagsResponse } from '../../app.types';
-import { TagType, type TagArrayType } from './tag.types';
+import {
+  ApiResponse, ErrorResponse, TagResponse, TagsResponse,
+} from '../../app.types';
+import { type TagArrayType } from './tag.types';
 import Card from '../card/card.model';
 import { UserType } from '../user/user.types';
 import { CardType } from '../card/card.types';
@@ -38,39 +40,55 @@ describe('Tag API', () => {
     dateRegistered: new Date(),
   };
 
+  const mockCard: CardType = {
+    id: uuidv4(),
+    userId,
+    columnId: uuidv4(),
+    brief: 'Test brief',
+    body: 'Test body',
+    color: '#AAAAAA',
+    dateCreated: new Date(),
+  };
+
   const tags: TagArrayType = [
     {
       id: uuidv4(),
       userId,
-      cardId,
+      cardIds: [
+        cardId,
+      ],
       label: 'Test label 1',
       color: '#333333',
     },
     {
       id: uuidv4(),
       userId: alternativeUserId,
-      cardId: alternativeCardId,
+      cardIds: [
+        alternativeCardId,
+      ],
       label: 'Test label 2',
       color: '#333333',
     },
     {
       id: uuidv4(),
       userId,
-      cardId,
+      cardIds: [
+        cardId,
+      ],
       label: 'Test label 3',
       color: '#333333',
     },
     {
       id: uuidv4(),
       userId: alternativeUserId,
-      cardId: alternativeCardId,
+      cardIds: [],
       label: 'Test label 4',
       color: '#333333',
     },
     {
       id: uuidv4(),
       userId: uuidv4(),
-      cardId: uuidv4(),
+      cardIds: [],
       label: 'Test label 5',
       color: '#333333',
     },
@@ -150,7 +168,9 @@ describe('Tag API', () => {
       const newTag = {
         id: uuidv4(),
         userId,
-        cardId,
+        cardIds: [
+          cardId,
+        ],
         label: 'new tag',
         color: '#333333',
       };
@@ -179,7 +199,9 @@ describe('Tag API', () => {
       const newTag = {
         id: uuidv4(),
         userId,
-        cardId,
+        cardIds: [
+          cardId,
+        ],
         label: 'new tag',
         color: '#333333',
       };
@@ -387,6 +409,160 @@ describe('Tag API', () => {
             value: '',
             path: '',
             message: 'not authorized to perform this action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+  });
+
+  describe('when updating tags', () => {
+    test('adds a cardId to a tag (200)', async () => {
+      const testTag = tags[0];
+      const newCardId = uuidv4();
+      const updatedTag = { ...testTag, cardIds: testTag?.cardIds.concat(newCardId) };
+
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce(testTag);
+      (Tag.update as jest.Mock).mockResolvedValueOnce([[], [updatedTag]]);
+
+      if (testTag) {
+        const response = await agent
+          .put(`/api/tags/${testTag.id}/card`)
+          .send({
+            cardId: newCardId,
+          })
+          .expect(200);
+
+        const responseData = TagResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(true);
+        expect(responseData.data.tag).toStrictEqual(updatedTag);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request to add cardId if card does not exist (400)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/card`)
+        .send({
+          cardId: uuidv4(),
+        })
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'card does not exist',
+        },
+      ]);
+    });
+
+    test('rejects request to add cardId if tag does not exist (400)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce(null);
+
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/card`)
+        .send({
+          cardId: uuidv4(),
+        })
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'tag does not exist',
+        },
+      ]);
+    });
+
+    test('rejects request to add cardId if user did not create tag (401)', async () => {
+      const testTag = tags[1];
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce(testTag);
+
+      if (testTag) {
+        const response = await agent
+          .put(`/api/tags/${testTag.id}/card`)
+          .send({
+            cardId,
+          })
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'not authorized to perform this action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request to add cardId if user did not create card (401)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce({
+        ...mockCard,
+        userId: alternativeUserId,
+      });
+
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/card`)
+        .send({
+          cardId,
+        });
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'not authorized to perform this action',
+        },
+      ]);
+    });
+
+    test('rejects request to add cardId if there is no valid user session (401)', async () => {
+      const testTag = tags[0];
+
+      if (testTag) {
+        const response = await api
+          .put(`/api/tags/${testTag?.id}/card`)
+          .send({
+            cardId: uuidv4(),
+          })
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform this action',
           },
         ]);
       } else {
