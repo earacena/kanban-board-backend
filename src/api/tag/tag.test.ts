@@ -8,7 +8,7 @@ import Tag from './tag.model';
 import {
   ApiResponse, ErrorResponse, TagResponse, TagsResponse,
 } from '../../app.types';
-import { type TagArrayType } from './tag.types';
+import { TagType, type TagArrayType } from './tag.types';
 import Card from '../card/card.model';
 import { UserType } from '../user/user.types';
 import { CardType } from '../card/card.types';
@@ -432,6 +432,34 @@ describe('Tag API', () => {
           .put(`/api/tags/${testTag.id}/card`)
           .send({
             cardId: newCardId,
+          })
+          .expect(200);
+
+        const responseData = TagResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(true);
+        expect(responseData.data.tag).toStrictEqual(updatedTag);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('removes a cardId from a tag', async () => {
+      const updatedTag = {
+        id: uuidv4(),
+        userId,
+        cardIds: [],
+        label: 'Test label 1',
+        color: '#333333',
+      };
+
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce({ ...updatedTag, cardIds: [cardId] });
+      (Tag.update as jest.Mock).mockResolvedValueOnce([[], [updatedTag]]);
+
+      if (updatedTag) {
+        const response = await agent
+          .put(`/api/tags/${updatedTag.id}/remove`)
+          .send({
+            cardId,
           })
           .expect(200);
 
