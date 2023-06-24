@@ -32,6 +32,14 @@ export const AddCardIdToTagPayload = z.object({
   cardId: z.string().uuid(),
 });
 
+export const RemoveCardIdFromTagParams = z.object({
+  tagId: z.string().uuid(),
+});
+
+export const RemoveCardIdFromTagPayload = z.object({
+  cardId: z.string().uuid(),
+});
+
 export const DeleteTagByIdParams = z.object({
   tagId: z.string().uuid(),
 });

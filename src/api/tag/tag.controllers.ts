@@ -8,7 +8,7 @@ import TagModel from './tag.model';
 import {
   AddCardIdToTagParams,
   AddCardIdToTagPayload,
-  CreateTagPayload, DeleteTagByIdParams, GetTagsByUserIdParams, Tag, Tags,
+  CreateTagPayload, DeleteTagByIdParams, GetTagsByUserIdParams, RemoveCardIdFromTagParams, RemoveCardIdFromTagPayload, Tag, Tags,
 } from './tag.types';
 import { Card } from '../card/card.types';
 import CardModel from '../card/card.model';
@@ -219,11 +219,59 @@ const addCardIdToTagController = async (
   }
 };
 
+const removeCardIdFromTagController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const isUserSessionActive = req.sessionID && req.session.user;
+    if (!isUserSessionActive) {
+      throw new UnauthorizedActionError(
+        'must be logged in to perform this action',
+      );
+    }
+    const { tagId } = RemoveCardIdFromTagParams.parse(req.params);
+    const { cardId } = RemoveCardIdFromTagPayload.parse(req.body);
+
+    const tagResult = Tag.safeParse(await TagModel.findByPk(tagId));
+
+    if (!tagResult.success) {
+      throw new TagNotFoundError('tag does not exist');
+    }
+
+    const tag = tagResult.data;
+    const sessionUserId = req.session.user.id;
+    if (tag.userId !== sessionUserId) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
+    }
+
+    const updateResults = await TagModel.update(
+      { cardIds: tag.cardIds.filter((c) => c !== cardId) },
+      { where: { id: tag.id }, returning: true },
+    );
+
+    const updatedTag = Tag.parse(updateResults[1][0]);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        tag: updatedTag,
+      },
+    });
+  } catch (error: unknown) {
+    next(error);
+  }
+};
+
 const tagControllers = {
   createTagController,
   getTagsByUserIdController,
   deleteTagController,
   addCardIdToTagController,
+  removeCardIdFromTagController,
 };
 
 export default tagControllers;
