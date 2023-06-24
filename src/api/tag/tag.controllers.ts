@@ -1,11 +1,17 @@
 import { NextFunction, Request, Response } from 'express';
-import { UnauthorizedActionError, UserNotFoundError } from '../../utils/errors';
+import {
+  UnauthorizedActionError, UserNotFoundError, CardNotFoundError, TagNotFoundError,
+} from '../../utils/errors';
 import { User } from '../user/user.types';
 import UserModel from '../user/user.model';
 import TagModel from './tag.model';
 import {
+  AddCardIdToTagParams,
+  AddCardIdToTagPayload,
   CreateTagPayload, DeleteTagByIdParams, GetTagsByUserIdParams, Tag, Tags,
 } from './tag.types';
+import { Card } from '../card/card.types';
+import CardModel from '../card/card.model';
 
 const createTagController = async (
   req: Request,
@@ -148,7 +154,7 @@ const deleteTagController = async (
   }
 };
 
-const addCardIdToTagController = (
+const addCardIdToTagController = async (
   req: Request,
   res: Response,
   next: NextFunction,
@@ -163,11 +169,14 @@ const addCardIdToTagController = (
 
     const { tagId } = AddCardIdToTagParams.parse(req.params);
     const { cardId } = AddCardIdToTagPayload.parse(req.body);
-
     const results = Card.safeParse(await CardModel.findByPk(cardId));
 
     if (!results.success) {
-      throw new ColumnNotFoundError('column does not exist');
+      console.error(results.error);
+    }
+
+    if (!results.success) {
+      throw new CardNotFoundError('card does not exist');
     }
 
     const card = results.data;
@@ -178,14 +187,26 @@ const addCardIdToTagController = (
       );
     }
 
-    const tag = Tag.parse(await TagModel.findByPk(tagId))
+    const tagResult = Tag.safeParse(await TagModel.findByPk(tagId));
+
+    if (!tagResult.success) {
+      throw new TagNotFoundError('tag does not exist');
+    }
+
+    const tag = tagResult.data;
+
+    if (tag.userId !== sessionUserId) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
+    }
 
     const updateResults = await TagModel.update(
       { cardIds: tag.cardIds.concat(cardId) },
       { where: { id: tag.id }, returning: true },
     );
 
-    const updatedColumn = Tag.parse(updateResults[1][0]);
+    const updatedTag = Tag.parse(updateResults[1][0]);
 
     res.status(200).json({
       success: true,
