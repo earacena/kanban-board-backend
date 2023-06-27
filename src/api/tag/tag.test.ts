@@ -452,6 +452,7 @@ describe('Tag API', () => {
         color: '#333333',
       };
 
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
       (Tag.findByPk as jest.Mock).mockResolvedValueOnce({ ...updatedTag, cardIds: [cardId] });
       (Tag.update as jest.Mock).mockResolvedValueOnce([[], [updatedTag]]);
 
@@ -577,6 +578,133 @@ describe('Tag API', () => {
       if (testTag) {
         const response = await api
           .put(`/api/tags/${testTag?.id}/card`)
+          .send({
+            cardId: uuidv4(),
+          })
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'must be logged in to perform this action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request to remove cardId if card does not exist (400)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(null);
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/remove`)
+        .send({
+          cardId: uuidv4(),
+        })
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'card does not exist',
+        },
+      ]);
+    });
+
+    test('rejects request to remove cardId if tag does not exist (400)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce(null);
+
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/remove`)
+        .send({
+          cardId: uuidv4(),
+        })
+        .expect(400);
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'invalid_request',
+          value: '',
+          path: '',
+          message: 'tag does not exist',
+        },
+      ]);
+    });
+
+    test('rejects request to remove cardId if user did not create tag (401)', async () => {
+      const testTag = tags[1];
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce(mockCard);
+      (Tag.findByPk as jest.Mock).mockResolvedValueOnce(testTag);
+
+      if (testTag) {
+        const response = await agent
+          .put(`/api/tags/${testTag.id}/remove`)
+          .send({
+            cardId,
+          })
+          .expect(401);
+
+        const responseData = ErrorResponse.parse(JSON.parse(response.text));
+        expect(responseData.success).toBe(false);
+        expect(responseData.errorType).toBe('base');
+        expect(responseData.errors).toStrictEqual([
+          {
+            code: 'unauthorized_action',
+            value: '',
+            path: '',
+            message: 'not authorized to perform this action',
+          },
+        ]);
+      } else {
+        throw new Error('undefined test data');
+      }
+    });
+
+    test('rejects request to remove cardId if user did not create card (401)', async () => {
+      (Card.findByPk as jest.Mock).mockResolvedValueOnce({
+        ...mockCard,
+        userId: alternativeUserId,
+      });
+
+      const response = await agent
+        .put(`/api/tags/${uuidv4()}/remove`)
+        .send({
+          cardId,
+        });
+
+      const responseData = ErrorResponse.parse(JSON.parse(response.text));
+      expect(responseData.success).toBe(false);
+      expect(responseData.errorType).toBe('base');
+      expect(responseData.errors).toStrictEqual([
+        {
+          code: 'unauthorized_action',
+          value: '',
+          path: '',
+          message: 'not authorized to perform this action',
+        },
+      ]);
+    });
+
+    test('rejects request to remove cardId if there is no valid user session (401)', async () => {
+      const testTag = tags[0];
+
+      if (testTag) {
+        const response = await api
+          .put(`/api/tags/${testTag?.id}/remove`)
           .send({
             cardId: uuidv4(),
           })
