@@ -35,7 +35,7 @@ CREATE TABLE columns (
 
 CREATE TABLE tags (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  card_id uuid NOT NULL,
+  card_ids uuid array DEFAULT '{}',
   user_id uuid NOT NULL,
   label TEXT NOT NULL,
   color TEXT NOT NULL
