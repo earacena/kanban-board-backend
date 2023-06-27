@@ -8,7 +8,13 @@ import TagModel from './tag.model';
 import {
   AddCardIdToTagParams,
   AddCardIdToTagPayload,
-  CreateTagPayload, DeleteTagByIdParams, GetTagsByUserIdParams, RemoveCardIdFromTagParams, RemoveCardIdFromTagPayload, Tag, Tags,
+  CreateTagPayload,
+  DeleteTagByIdParams,
+  GetTagsByUserIdParams,
+  RemoveCardIdFromTagParams,
+  RemoveCardIdFromTagPayload,
+  Tag,
+  Tags,
 } from './tag.types';
 import { Card } from '../card/card.types';
 import CardModel from '../card/card.model';
@@ -172,10 +178,6 @@ const addCardIdToTagController = async (
     const results = Card.safeParse(await CardModel.findByPk(cardId));
 
     if (!results.success) {
-      console.error(results.error);
-    }
-
-    if (!results.success) {
       throw new CardNotFoundError('card does not exist');
     }
 
@@ -234,6 +236,20 @@ const removeCardIdFromTagController = async (
     const { tagId } = RemoveCardIdFromTagParams.parse(req.params);
     const { cardId } = RemoveCardIdFromTagPayload.parse(req.body);
 
+    const results = Card.safeParse(await CardModel.findByPk(cardId));
+
+    if (!results.success) {
+      throw new CardNotFoundError('card does not exist');
+    }
+
+    const card = results.data;
+    const sessionUserId = req.session.user.id;
+    if (card.userId !== sessionUserId) {
+      throw new UnauthorizedActionError(
+        'not authorized to perform this action',
+      );
+    }
+
     const tagResult = Tag.safeParse(await TagModel.findByPk(tagId));
 
     if (!tagResult.success) {
@@ -241,7 +257,6 @@ const removeCardIdFromTagController = async (
     }
 
     const tag = tagResult.data;
-    const sessionUserId = req.session.user.id;
     if (tag.userId !== sessionUserId) {
       throw new UnauthorizedActionError(
         'not authorized to perform this action',
