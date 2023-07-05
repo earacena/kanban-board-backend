@@ -109,7 +109,9 @@ const main = async () => {
 
   if (NODE_ENV === 'production') {
     app.listen(SERVER_PORT, () => {
-      console.log(`http server @ port ${SERVER_PORT}`);
+      console.log(`HTTP server @ port ${SERVER_PORT}`);
+      console.log(`Node environment: ${NODE_ENV}`);
+      console.log(`Using database @ ${database.host}:${database.port}/${database.name}`);
     });
   }
 };
