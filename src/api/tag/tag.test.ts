@@ -8,7 +8,7 @@ import Tag from './tag.model';
 import {
   ApiResponse, ErrorResponse, TagResponse, TagsResponse,
 } from '../../app.types';
-import { TagType, type TagArrayType } from './tag.types';
+import { type TagArrayType } from './tag.types';
 import Card from '../card/card.model';
 import { UserType } from '../user/user.types';
 import { CardType } from '../card/card.types';
