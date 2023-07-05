@@ -24,8 +24,8 @@ export const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('Connected to database');
-  } catch {
-    console.log('Failed to connect to database');
+  } catch (error: unknown) {
+    console.log('Failed to connect to database: ', error);
   }
 };
 
