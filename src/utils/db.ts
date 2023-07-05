@@ -10,11 +10,6 @@ if (NODE_ENV === 'development') {
 if (NODE_ENV === 'production') {
   options = {
     logging: false,
-    dialectOptions: {
-      ssl: {
-        require: true,
-      },
-    },
   };
 }
 
