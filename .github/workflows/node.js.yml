@@ -10,15 +10,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-
+  create-env-file:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
     steps:
     - name: Create .env file
       uses: SpicyPizza/create-envfile@v2.0.2
@@ -42,6 +35,13 @@ jobs:
         envkey_PROD_DATABASE_PORT: 0
         envkey_PROD_DATABASE_NAME: ''
 
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+    steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
