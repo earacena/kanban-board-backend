@@ -14,27 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Create .env file
-      uses: SpicyPizza/create-envfile@v2.0.2
-      with:
-        envkey_SERVER_PORT: 10000
-        envkey_SECRET_SESSION_KEY: '12345abcdef'
-        envkey_CORS_ORIGIN: 'https://localhost:3000'
-        envkey_DEV_DATABASE_USER: 'pguser'
-        envkey_DEV_DATABASE_PASSWORD: 'pgpass'
-        envkey_DEV_DATABASE_HOST: 'localhost'
-        envkey_DEV_DATABASE_PORT: 3003
-        envkey_DEV_DATABASE_NAME: 'pgdb'
-        envkey_TEST_DATABASE_USER: 'pguser'
-        envkey_TEST_DATABASE_PASSWORD: 'pgpass'
-        envkey_TEST_DATABASE_HOST: 'localhost'
-        envkey_TEST_DATABASE_PORT: 3003
-        envkey_TEST_DATABASE_NAME: 'pgdb'
-        envkey_PROD_DATABASE_USER: ''
-        envkey_PROD_DATABASE_PASSWORD: ''
-        envkey_PROD_DATABASE_HOST: ''
-        envkey_PROD_DATABASE_PORT: 0
-        envkey_PROD_DATABASE_NAME: ''
-
+      run: echo "SERVER_PORT=10000 SECRET_SESSION_KEY='12345abcdef' CORS_ORIGIN='https://localhost:3000' DEV_DATABASE_USER='pguser' DEV_DATABASE_PASSWORD='pgpass' DEV_DATABASE_HOST='localhost' DEV_DATABASE_PORT=3003 DEV_DATABASE_NAME='pgdb' TEST_DATABASE_USER='pguser' TEST_DATABASE_PASSWORD='pgpass' TEST_DATABASE_HOST='localhost' TEST_DATABASE_PORT=3003 TEST_DATABASE_NAME='pgdb' PROD_DATABASE_USER='' PROD_DATABASE_PASSWORD='' PROD_DATABASE_HOST='' PROD_DATABASE_PORT=10 PROD_DATABASE_NAME='' > .env
   build:
     runs-on: ubuntu-latest
     strategy:
