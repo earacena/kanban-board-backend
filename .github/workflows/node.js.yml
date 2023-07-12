@@ -15,7 +15,7 @@ jobs:
     steps:
     - name: Create .env file
       run: echo "SERVER_PORT=10000\nSECRET_SESSION_KEY='12345abcdef'\nCORS_ORIGIN='https://localhost:3000'\nDEV_DATABASE_USER='pguser'\nDEV_DATABASE_PASSWORD='pgpass'\nDEV_DATABASE_HOST='localhost'\nDEV_DATABASE_PORT=3003\nDEV_DATABASE_NAME='pgdb'\nTEST_DATABASE_USER='pguser'\nTEST_DATABASE_PASSWORD='pgpass'\nTEST_DATABASE_HOST='localhost'\nTEST_DATABASE_PORT=3003\nTEST_DATABASE_NAME='pgdb'\nPROD_DATABASE_USER=''\nPROD_DATABASE_PASSWORD=''\nPROD_DATABASE_HOST=''\nPROD_DATABASE_PORT=10\nPROD_DATABASE_NAME=''" > .env
-      run: cat .env
+    - run: cat .env
   build:
     runs-on: ubuntu-latest
     strategy:
