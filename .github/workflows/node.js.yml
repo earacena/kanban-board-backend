@@ -20,6 +20,28 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
+    - name: Create .env file
+      uses: SpicyPizza/create-envfile@v2.0.2
+      with:
+        envkey_SERVER_PORT: 10000
+        envkey_SECRET_SESSION_KEY: '12345abcdef'
+        envkey_CORS_ORIGIN: 'https://localhost:3000'
+        envkey_DEV_DATABASE_USER: 'pguser'
+        envkey_DEV_DATABASE_PASSWORD: 'pgpass'
+        envkey_DEV_DATABASE_HOST: 'localhost'
+        envkey_DEV_DATABASE_PORT: 3003
+        envkey_DEV_DATABASE_NAME: 'pgdb'
+        envkey_TEST_DATABASE_USER: 'pguser'
+        envkey_TEST_DATABASE_PASSWORD: 'pgpass'
+        envkey_TEST_DATABASE_HOST: 'localhost'
+        envkey_TEST_DATABASE_PORT: 3003
+        envkey_TEST_DATABASE_NAME: 'pgdb'
+        envkey_PROD_DATABASE_USER: ''
+        envkey_PROD_DATABASE_PASSWORD: ''
+        envkey_PROD_DATABASE_HOST: ''
+        envkey_PROD_DATABASE_PORT: 0
+        envkey_PROD_DATABASE_NAME: ''
+
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
