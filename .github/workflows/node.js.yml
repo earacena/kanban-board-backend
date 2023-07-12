@@ -14,24 +14,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Create .env file
-      run: echo "
-        SERVER_PORT='10000'
-        SECRET_SESSION_KEY='12345abcdef'
-        CORS_ORIGIN='https://localhost:3000'
-        DEV_DATABASE_USER='pguser'
-        DEV_DATABASE_PASSWORD='pgpass'
-        DEV_DATABASE_HOST='localhost'
-        DEV_DATABASE_PORT='3003'
-        DEV_DATABASE_NAME='pgdb'
-        TEST_DATABASE_USER='pguser'
-        TEST_DATABASE_PASSWORD='pgpass'
-        TEST_DATABASE_HOST='localhost'
-        TEST_DATABASE_PORT='3003'
-        TEST_DATABASE_NAME='pgdb'
-        PROD_DATABASE_USER=''
-        PROD_DATABASE_PASSWORD=''
-        PROD_DATABASE_HOST=''
-        PROD_DATABASE_PORT='10'
+      run: echo -e "
+        SERVER_PORT='10000'\n
+        SECRET_SESSION_KEY='12345abcdef'\n
+        CORS_ORIGIN='https://localhost:3000'\n
+        DEV_DATABASE_USER='pguser'\n
+        DEV_DATABASE_PASSWORD='pgpass'\n
+        DEV_DATABASE_HOST='localhost'\n
+        DEV_DATABASE_PORT='3003'\n
+        DEV_DATABASE_NAME='pgdb'\n
+        TEST_DATABASE_USER='pguser'\n
+        TEST_DATABASE_PASSWORD='pgpass'\n
+        TEST_DATABASE_HOST='localhost'\n
+        TEST_DATABASE_PORT='3003'\n
+        TEST_DATABASE_NAME='pgdb'\n
+        PROD_DATABASE_USER=''\n
+        PROD_DATABASE_PASSWORD=''\n
+        PROD_DATABASE_HOST=''\n
+        PROD_DATABASE_PORT='10'\n
         PROD_DATABASE_NAME=''" > .env
     - run: cat .env
   build:
