@@ -46,4 +46,4 @@ jobs:
         cache: 'npm'
     - run: npm ci
     - run: npm run build --if-present
-    - run: ${{ env.APP_ENV }} NODE_ENV=testing jest --verbose --silent
+    - run: ${{ env.APP_ENV }} npm test -- --silent
