@@ -12,7 +12,7 @@ interface DatabaseCredentials {
 }
 
 export const NODE_ENV = z.string().parse(process.env['NODE_ENV']);
-export const SERVER_PORT = z.number().parse(Number(process.env['SERVER_PORT']));
+export const SERVER_PORT = z.coerce.number().parse(process.env['SERVER_PORT']);
 export const CORS_ORIGIN = z.string().parse(process.env['CORS_ORIGIN']);
 export const SECRET_SESSION_KEY = z.string().parse(process.env['SECRET_SESSION_KEY']);
 
