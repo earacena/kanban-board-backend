@@ -11,10 +11,10 @@ interface DatabaseCredentials {
   url: string,
 }
 
-export const NODE_ENV = z.string().parse(process.env['NODE_ENV']);
-export const SERVER_PORT = NODE_ENV !== 'testing' ? z.number().parse(Number(process.env['SERVER_PORT'])) : 4000;
-export const CORS_ORIGIN = NODE_ENV !== 'testing' ? z.string().parse(process.env['CORS_ORIGIN']) : 'https://localhost:3000';
-export const SECRET_SESSION_KEY = NODE_ENV !== 'testing' ? z.string().parse(process.env['SECRET_SESSION_KEY']) : 'secretkey';
+let nodeEnv = z.string().parse(process.env['NODE_ENV']);
+let serverPort = 3001;
+let corsOrigin = 'https://localhost:3000';
+let secretSessionKey = 'default secret key';
 
 let databaseUser = '';
 let databasePassword = '';
@@ -23,14 +23,21 @@ let databasePort = 3002;
 let databaseName = '';
 let databaseUrl = '';
 
-if (NODE_ENV === 'production') {
+if (!nodeEnv || nodeEnv === undefined || nodeEnv !== 'testing') {
+  nodeEnv = z.string().parse(process.env['NODE_ENV']);
+  serverPort = z.coerce.number().parse(Number(process.env['SERVER_PORT']));
+  corsOrigin = z.string().parse(process.env['CORS_ORIGIN']);
+  secretSessionKey = z.string().parse(process.env['SECRET_SESSION_KEY']);
+}
+
+if (nodeEnv === 'production') {
   // Production environment
   databaseUser = z.string().parse(process.env['PROD_DATABASE_USER']);
   databasePassword = z.string().parse(process.env['PROD_DATABASE_PASSWORD']);
   databaseHost = z.string().parse(process.env['PROD_DATABASE_HOST']);
   databasePort = z.number().parse(Number(process.env['PROD_DATABASE_PORT']));
   databaseName = z.string().parse(process.env['PROD_DATABASE_NAME']);
-} else if (NODE_ENV === 'development') {
+} else if (nodeEnv === 'development') {
   // Development environment
   databaseUser = z.string().parse(process.env['DEV_DATABASE_USER']);
   databasePassword = z.string().parse(process.env['DEV_DATABASE_PASSWORD']);
@@ -50,3 +57,8 @@ export const database: DatabaseCredentials = {
   name: databaseName,
   url: databaseUrl,
 };
+
+export const NODE_ENV = nodeEnv;
+export const SERVER_PORT = serverPort;
+export const CORS_ORIGIN = corsOrigin;
+export const SECRET_SESSION_KEY = secretSessionKey;
