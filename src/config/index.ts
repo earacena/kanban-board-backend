@@ -14,7 +14,7 @@ interface DatabaseCredentials {
 export const NODE_ENV = z.string().parse(process.env['NODE_ENV']);
 export const SERVER_PORT = NODE_ENV !== 'testing' ? z.number().parse(Number(process.env['SERVER_PORT'])) : 4000;
 export const CORS_ORIGIN = NODE_ENV !== 'testing' ? z.string().parse(process.env['CORS_ORIGIN']) : 'https://localhost:3000';
-export const SECRET_SESSION_KEY = z.string().parse(process.env['SECRET_SESSION_KEY']);
+export const SECRET_SESSION_KEY = NODE_ENV !== 'testing' ? z.string().parse(process.env['SECRET_SESSION_KEY']) : 'secretkey';
 
 let databaseUser = '';
 let databasePassword = '';
